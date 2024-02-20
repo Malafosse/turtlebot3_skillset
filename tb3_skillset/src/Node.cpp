@@ -110,17 +110,17 @@ void Tb3SkillsetNode::skill_get_home_on_start(){
   initial_pose.header.frame_id = "map";
   RCLCPP_INFO(this->get_logger(), "Publishing initial pose");
   this->GetHome_publisher_->publish(initial_pose);
-};
+}
 
 void Tb3SkillsetNode::skill_get_home_invariant_not_moving_hook(){
   RCLCPP_ERROR(this->get_logger(), "Get Home Invariant error");
-};
+}
 
 void Tb3SkillsetNode::skill_get_home_interrupt_hook(){
   RCLCPP_ERROR(this->get_logger(), "Interrupted skill Get Home");
-};
+}
 
-//}//ns
+//} // namespace tb3_skillset_ns
 
 /*
 uint8 SUCCESS = 0

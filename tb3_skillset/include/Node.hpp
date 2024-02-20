@@ -33,7 +33,7 @@ public:
             "navigate_to_pose"
         );
 
-        this->GetHome_publisher_ = create_publisher<PoseWithCovarianceStamped>(
+        GetHome_publisher_ = this->create_publisher<PoseWithCovarianceStamped>(
             "initialpose",
             10
         );
@@ -75,7 +75,7 @@ private:
     
 }; // Class
 
-//} // NS
+//} // namespace tb3_skillset_ns
 
 //RCLCPP_COMPONENTS_REGISTER_NODE(tb3_skillset_ns::Tb3SkillsetNode)
 #endif
