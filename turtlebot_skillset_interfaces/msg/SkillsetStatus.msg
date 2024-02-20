@@ -1,0 +1,5 @@
+builtin_interfaces/Time stamp
+ResourceState[] resources
+SkillGoToStatus skill_go_to
+SkillGetHomeStatus skill_get_home
+string info

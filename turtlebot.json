@@ -1,0 +1,19 @@
+{
+    "folder": "./",
+    "type": [
+        {
+            "name": "Float",
+            "idl": "float64"
+        },
+        {
+            "name": "PoseStamped",
+            "package": "geometry_msgs",
+            "message": "PoseStamped"
+        },
+        {
+            "name": "PoseWithCovarianceStamped",
+            "package": "geometry_msgs",
+            "message": "PoseWithCovarianceStamped"
+        }
+    ]
+}
