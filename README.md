@@ -6,6 +6,7 @@
 - robot_language
 - Skillset GUI generator
 - SkiNet Release
+
 [Tuto ONERA Robot Skills](https://onera-robot-skills.gitlab.io/introduction.html)
 ![](https://onera-robot-skills.gitlab.io/_images/intro.png)
 
@@ -80,8 +81,8 @@ ros2 run your_package tb3_skillset_manager
 >Where `/skillset_manager` is the name of the skillset node 
 
 ## Simulate a Turtlebot in Gazebo: 
-Crash course video
-[Vidéo crash course](https://www.youtube.com/watch?v=idQb2pB-h2Q) Turtlebot3 - Nav2
+[Crash course video](https://www.youtube.com/watch?v=idQb2pB-h2Q) Turtlebot3 - Nav2
 
 [TurtleBot3 Website](https://emanual.robotis.com/docs/en/platform/turtlebot3/learn/#learn)
+
 [Nav2 Website](https://navigation.ros.org/index.html) see also [[Navigation2 STack.md]]
