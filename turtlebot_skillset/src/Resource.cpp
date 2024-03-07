@@ -2,7 +2,7 @@
 
 namespace turtlebot_skillset
 {
-    //-------------------------------------------------- Authority --------------------------------------------------
+    //-------------------------------------------------- authority --------------------------------------------------
 
     std::vector<AuthorityState> Authority::states() const
     {
@@ -34,20 +34,20 @@ namespace turtlebot_skillset
         }
     
     }
-    //-------------------------------------------------- Move --------------------------------------------------
+    //-------------------------------------------------- move --------------------------------------------------
 
     std::vector<MoveState> Move::states() const
     {
         return std::vector<MoveState>{
-            MoveState::Moving, MoveState::NotMoving, 
+            MoveState::Moving, MoveState::Idle, 
         };
     }
 
     std::vector<Arc<MoveState>> Move::transitions() const
     {
         return std::vector<Arc<MoveState>>{
-            Arc<MoveState>(MoveState::Moving, MoveState::NotMoving), 
-            Arc<MoveState>(MoveState::NotMoving, MoveState::Moving), 
+            Arc<MoveState>(MoveState::Moving, MoveState::Idle), 
+            Arc<MoveState>(MoveState::Idle, MoveState::Moving), 
             };
     }
 
@@ -59,14 +59,14 @@ namespace turtlebot_skillset
 
         switch (current()) {
         case MoveState::Moving:
-            return (dst == MoveState::NotMoving);
-        case MoveState::NotMoving:
+            return (dst == MoveState::Idle);
+        case MoveState::Idle:
             return (dst == MoveState::Moving);
         default: return false;
         }
     
     }
-    //-------------------------------------------------- Home --------------------------------------------------
+    //-------------------------------------------------- home --------------------------------------------------
 
     std::vector<HomeState> Home::states() const
     {
@@ -100,6 +100,38 @@ namespace turtlebot_skillset
             return (dst == HomeState::Lost) || (dst == HomeState::Initialized);
         case HomeState::Initialized:
             return (dst == HomeState::Lost) || (dst == HomeState::Initializing);
+        default: return false;
+        }
+    
+    }
+    //-------------------------------------------------- battery_status --------------------------------------------------
+
+    std::vector<BatteryStatusState> BatteryStatus::states() const
+    {
+        return std::vector<BatteryStatusState>{
+            BatteryStatusState::Low, BatteryStatusState::Normal, 
+        };
+    }
+
+    std::vector<Arc<BatteryStatusState>> BatteryStatus::transitions() const
+    {
+        return std::vector<Arc<BatteryStatusState>>{
+            Arc<BatteryStatusState>(BatteryStatusState::Low, BatteryStatusState::Normal), 
+            Arc<BatteryStatusState>(BatteryStatusState::Normal, BatteryStatusState::Low), 
+            };
+    }
+
+    bool BatteryStatus::check_next(BatteryStatusState dst) const
+    {
+        if (current() == dst) {
+            return true;
+        }
+
+        switch (current()) {
+        case BatteryStatusState::Low:
+            return (dst == BatteryStatusState::Normal);
+        case BatteryStatusState::Normal:
+            return (dst == BatteryStatusState::Low);
         default: return false;
         }
     
@@ -140,8 +172,8 @@ std::string to_string(const turtlebot_skillset::MoveState &x)
     {
     case turtlebot_skillset::MoveState::Moving:
         return "Moving";
-    case turtlebot_skillset::MoveState::NotMoving:
-        return "NotMoving";
+    case turtlebot_skillset::MoveState::Idle:
+        return "Idle";
     }
     return "";
 }
@@ -153,8 +185,8 @@ std::ostream &operator<<(std::ostream &out, const turtlebot_skillset::MoveState 
     case turtlebot_skillset::MoveState::Moving:
         out << "Moving";
         break;
-    case turtlebot_skillset::MoveState::NotMoving:
-        out << "NotMoving";
+    case turtlebot_skillset::MoveState::Idle:
+        out << "Idle";
         break;
     }
     return out;
@@ -186,6 +218,32 @@ std::ostream &operator<<(std::ostream &out, const turtlebot_skillset::HomeState 
         break;
     case turtlebot_skillset::HomeState::Initialized:
         out << "Initialized";
+        break;
+    }
+    return out;
+}
+
+std::string to_string(const turtlebot_skillset::BatteryStatusState &x)
+{
+    switch (x)
+    {
+    case turtlebot_skillset::BatteryStatusState::Low:
+        return "Low";
+    case turtlebot_skillset::BatteryStatusState::Normal:
+        return "Normal";
+    }
+    return "";
+}
+
+std::ostream &operator<<(std::ostream &out, const turtlebot_skillset::BatteryStatusState &x)
+{
+    switch (x)
+    {
+    case turtlebot_skillset::BatteryStatusState::Low:
+        out << "Low";
+        break;
+    case turtlebot_skillset::BatteryStatusState::Normal:
+        out << "Normal";
         break;
     }
     return out;

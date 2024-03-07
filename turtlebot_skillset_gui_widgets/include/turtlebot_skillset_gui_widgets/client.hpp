@@ -9,10 +9,13 @@
 #include <turtlebot_skillset_interfaces/msg/data_request.hpp>
 #include <turtlebot_skillset_interfaces/msg/skill_interrupt.hpp>
 
+#include <turtlebot_skillset_interfaces/msg/data_currentpose.hpp>
+#include <turtlebot_skillset_interfaces/msg/data_currentpose_response.hpp>
+
 
 #include <turtlebot_skillset_interfaces/msg/skill_go_to_status.hpp>
 #include <turtlebot_skillset_interfaces/msg/skill_go_to_input.hpp>
-
+#include <turtlebot_skillset_interfaces/msg/skill_go_to_progress.hpp>
 
 #include <turtlebot_skillset_interfaces/msg/skill_go_to_request.hpp>
 #include <turtlebot_skillset_interfaces/msg/skill_go_to_response.hpp>
@@ -43,6 +46,9 @@ class TurtlebotSkillsetClient
     
     //----- data getters
     
+    inline turtlebot_skillset_interfaces::msg::DataCurrentposeResponse get_data_currentpose() const { return data_currentpose_; };
+    void create_data_currentpose_subscription();
+    
     //----- resource getters
     
     inline std::string get_resource_authority() const { return resource_state_.at("authority"); };
@@ -50,6 +56,8 @@ class TurtlebotSkillsetClient
     inline std::string get_resource_move() const { return resource_state_.at("move"); };
     
     inline std::string get_resource_home() const { return resource_state_.at("home"); };
+    
+    inline std::string get_resource_battery_status() const { return resource_state_.at("battery_status"); };
     
 
   protected:
@@ -68,13 +76,17 @@ class TurtlebotSkillsetClient
     double time_since_event(std::string event) const;
     //----- data
     
+    turtlebot_skillset_interfaces::msg::DataCurrentposeResponse data_currentpose_;
+    std::string data_currentpose_request();
+    void destroy_data_currentpose_subscription();
+    
     //----- resources
     std::map<std::string, std::string> resource_state_;
     //----- skills
     
     turtlebot_skillset_interfaces::msg::SkillGoToStatus go_to_status_;
     turtlebot_skillset_interfaces::msg::SkillGoToInput go_to_input_;
-    
+    turtlebot_skillset_interfaces::msg::SkillGoToProgress go_to_progress_;
     
     turtlebot_skillset_interfaces::msg::SkillGoToResponse go_to_result_;
     
@@ -101,12 +113,21 @@ class TurtlebotSkillsetClient
     void event_callback_(const turtlebot_skillset_interfaces::msg::EventResponse::SharedPtr msg);
     //----- data
     
+    rclcpp::Subscription<turtlebot_skillset_interfaces::msg::DataCurrentpose>::SharedPtr data_currentpose_sub_;
+    void data_currentpose_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentpose::SharedPtr msg);
+    rclcpp::Publisher<turtlebot_skillset_interfaces::msg::DataRequest>::SharedPtr data_currentpose_pub_;
+    rclcpp::Subscription<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>::SharedPtr data_currentpose_response_;
+    void data_currentpose_response_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentposeResponse::SharedPtr msg);
+    
     //----- skills
     
     rclcpp::Publisher<turtlebot_skillset_interfaces::msg::SkillGoToRequest>::SharedPtr go_to_request_pub_;
     rclcpp::Publisher<turtlebot_skillset_interfaces::msg::SkillInterrupt>::SharedPtr go_to_interrupt_pub_;
     rclcpp::Subscription<turtlebot_skillset_interfaces::msg::SkillGoToResponse>::SharedPtr go_to_response_sub_;
     void go_to_response_callback(const turtlebot_skillset_interfaces::msg::SkillGoToResponse::SharedPtr msg);
+    
+    rclcpp::Subscription<turtlebot_skillset_interfaces::msg::SkillGoToProgress>::SharedPtr go_to_progress_sub_;
+    void go_to_progress_callback(const turtlebot_skillset_interfaces::msg::SkillGoToProgress::SharedPtr msg);
     
     
     rclcpp::Publisher<turtlebot_skillset_interfaces::msg::SkillGetHomeRequest>::SharedPtr get_home_request_pub_;

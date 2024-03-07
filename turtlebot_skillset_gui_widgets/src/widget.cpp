@@ -11,60 +11,158 @@ TurtlebotSkillsetWidget::TurtlebotSkillsetWidget(const std::string &name, rclcpp
     , display_resources_(display_resources)
     , display_events_(display_events)
     , event_response_timeout_(3.0)
+    , subscribe_currentpose_(false)
     , active_go_to_(false)
     , active_get_home_(false)
 {
     
         
-        try {
-            node_->declare_parameter("turtlebot.GoTo.x", 0.0); 
+        	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.header.stamp.sec", 0); 
         } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
-            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.x already declared");
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.header.stamp.sec already declared");
         } 
-        this->go_to_input_.x = node_->get_parameter("turtlebot.GoTo.x").as_double();
+        this->go_to_input_.goalpose.header.stamp.sec = node_->get_parameter("turtlebot.GoTo.goalpose.header.stamp.sec").as_int();
         
-        
-        try {
-            node_->declare_parameter("turtlebot.GoTo.y", 0.0); 
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.header.stamp.nanosec", 0); 
         } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
-            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.y already declared");
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.header.stamp.nanosec already declared");
         } 
-        this->go_to_input_.y = node_->get_parameter("turtlebot.GoTo.y").as_double();
+        this->go_to_input_.goalpose.header.stamp.nanosec = node_->get_parameter("turtlebot.GoTo.goalpose.header.stamp.nanosec").as_int();
         
-        
-        try {
-            node_->declare_parameter("turtlebot.GoTo.w", 0.0); 
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.header.frame_id", ""); 
         } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
-            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.w already declared");
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.header.frame_id already declared");
         } 
-        this->go_to_input_.w = node_->get_parameter("turtlebot.GoTo.w").as_double();
+        this->go_to_input_.goalpose.header.frame_id = node_->get_parameter("turtlebot.GoTo.goalpose.header.frame_id").as_string();
         
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.position.x", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.position.x already declared");
+        } 
+        this->go_to_input_.goalpose.pose.position.x = node_->get_parameter("turtlebot.GoTo.goalpose.pose.position.x").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.position.y", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.position.y already declared");
+        } 
+        this->go_to_input_.goalpose.pose.position.y = node_->get_parameter("turtlebot.GoTo.goalpose.pose.position.y").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.position.z", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.position.z already declared");
+        } 
+        this->go_to_input_.goalpose.pose.position.z = node_->get_parameter("turtlebot.GoTo.goalpose.pose.position.z").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.orientation.x", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.orientation.x already declared");
+        } 
+        this->go_to_input_.goalpose.pose.orientation.x = node_->get_parameter("turtlebot.GoTo.goalpose.pose.orientation.x").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.orientation.y", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.orientation.y already declared");
+        } 
+        this->go_to_input_.goalpose.pose.orientation.y = node_->get_parameter("turtlebot.GoTo.goalpose.pose.orientation.y").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.orientation.z", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.orientation.z already declared");
+        } 
+        this->go_to_input_.goalpose.pose.orientation.z = node_->get_parameter("turtlebot.GoTo.goalpose.pose.orientation.z").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.GoTo.goalpose.pose.orientation.w", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.GoTo.goalpose.pose.orientation.w already declared");
+        } 
+        this->go_to_input_.goalpose.pose.orientation.w = node_->get_parameter("turtlebot.GoTo.goalpose.pose.orientation.w").as_double();
+        
+
         
     
         
-        try {
-            node_->declare_parameter("turtlebot.getHome.x", 0.0); 
+        	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.header.stamp.sec", 0); 
         } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
-            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.x already declared");
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.header.stamp.sec already declared");
         } 
-        this->get_home_input_.x = node_->get_parameter("turtlebot.getHome.x").as_double();
+        this->get_home_input_.initialpose.header.stamp.sec = node_->get_parameter("turtlebot.getHome.initialpose.header.stamp.sec").as_int();
         
-        
-        try {
-            node_->declare_parameter("turtlebot.getHome.y", 0.0); 
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.header.stamp.nanosec", 0); 
         } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
-            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.y already declared");
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.header.stamp.nanosec already declared");
         } 
-        this->get_home_input_.y = node_->get_parameter("turtlebot.getHome.y").as_double();
+        this->get_home_input_.initialpose.header.stamp.nanosec = node_->get_parameter("turtlebot.getHome.initialpose.header.stamp.nanosec").as_int();
         
-        
-        try {
-            node_->declare_parameter("turtlebot.getHome.w", 0.0); 
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.header.frame_id", ""); 
         } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
-            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.w already declared");
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.header.frame_id already declared");
         } 
-        this->get_home_input_.w = node_->get_parameter("turtlebot.getHome.w").as_double();
+        this->get_home_input_.initialpose.header.frame_id = node_->get_parameter("turtlebot.getHome.initialpose.header.frame_id").as_string();
         
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.position.x", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.position.x already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.position.x = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.position.x").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.position.y", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.position.y already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.position.y = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.position.y").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.position.z", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.position.z already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.position.z = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.position.z").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.x", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.orientation.x already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.orientation.x = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.x").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.y", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.orientation.y already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.orientation.y = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.y").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.z", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.orientation.z already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.orientation.z = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.z").as_double();
+        
+	try {
+            node_->declare_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.w", 0.0); 
+        } catch (rclcpp::exceptions::ParameterAlreadyDeclaredException& e) {
+            RCLCPP_WARN(node_->get_logger(), "parameter turtlebot.getHome.initialpose.pose.pose.orientation.w already declared");
+        } 
+        this->get_home_input_.initialpose.pose.pose.orientation.w = node_->get_parameter("turtlebot.getHome.initialpose.pose.pose.orientation.w").as_double();
+        
+	// generation of double[36] not yet implemented
+
         
     
 }
@@ -159,19 +257,19 @@ void TurtlebotSkillsetWidget::event_row_authority_to_teleop() {
         ImGui::TextColored(color, "%s", status.c_str());
 }
 
-void TurtlebotSkillsetWidget::event_button_auto_Home() {
-    if (ImGui::Button("auto_Home##turtlebot")) {
-        events_["auto_Home"].id = this->send_event("auto_Home");
-        events_["auto_Home"].response = turtlebot_skillset_interfaces::msg::EventResponse::UNDEFINED;
-        events_ids_[events_["auto_Home"].id] = "auto_Home";
+void TurtlebotSkillsetWidget::event_button_charge_battery() {
+    if (ImGui::Button("charge_battery##turtlebot")) {
+        events_["charge_battery"].id = this->send_event("charge_battery");
+        events_["charge_battery"].response = turtlebot_skillset_interfaces::msg::EventResponse::UNDEFINED;
+        events_ids_[events_["charge_battery"].id] = "charge_battery";
     }
 }
 
-void TurtlebotSkillsetWidget::event_row_auto_Home() {
+void TurtlebotSkillsetWidget::event_row_charge_battery() {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
-    event_button_auto_Home();
-    auto evt = events_["auto_Home"];
+    event_button_charge_battery();
+    auto evt = events_["charge_battery"];
     ImGui::TableNextColumn();
     ImVec4 color(1., 0., 0., 1.);
     std::string status = "UNKNOWN";
@@ -188,7 +286,42 @@ void TurtlebotSkillsetWidget::event_row_auto_Home() {
     case turtlebot_skillset_interfaces::msg::EventResponse::EFFECT_FAILURE:
         status = "EFFECT_FAILURE"; break;
     }
-    if (this->time_since_event("auto_Home") > event_response_timeout_)
+    if (this->time_since_event("charge_battery") > event_response_timeout_)
+        color.x = color.y = color.z = .6;
+    if (!evt.id.empty())
+        ImGui::TextColored(color, "%s", status.c_str());
+}
+
+void TurtlebotSkillsetWidget::event_button_low_battery() {
+    if (ImGui::Button("low_battery##turtlebot")) {
+        events_["low_battery"].id = this->send_event("low_battery");
+        events_["low_battery"].response = turtlebot_skillset_interfaces::msg::EventResponse::UNDEFINED;
+        events_ids_[events_["low_battery"].id] = "low_battery";
+    }
+}
+
+void TurtlebotSkillsetWidget::event_row_low_battery() {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    event_button_low_battery();
+    auto evt = events_["low_battery"];
+    ImGui::TableNextColumn();
+    ImVec4 color(1., 0., 0., 1.);
+    std::string status = "UNKNOWN";
+    switch (evt.response)
+    {
+    case turtlebot_skillset_interfaces::msg::EventResponse::SUCCESS:
+        status = "SUCCESS"; 
+        color.x = 0.0; color.y = 1.0;
+        break;
+    case turtlebot_skillset_interfaces::msg::EventResponse::UNDEFINED:
+        status = "UNDEFINED"; break;
+    case turtlebot_skillset_interfaces::msg::EventResponse::GUARD_FAILURE:
+        status = "GUARD_FAILURE"; break;
+    case turtlebot_skillset_interfaces::msg::EventResponse::EFFECT_FAILURE:
+        status = "EFFECT_FAILURE"; break;
+    }
+    if (this->time_since_event("low_battery") > event_response_timeout_)
         color.x = color.y = color.z = .6;
     if (!evt.id.empty())
         ImGui::TextColored(color, "%s", status.c_str());
@@ -243,6 +376,46 @@ void TurtlebotSkillsetWidget::update()
         this->request_status();
     }
     
+	if (this->display_data_ && ImGui::CollapsingHeader("Data", ImGuiTreeNodeFlags_DefaultOpen)) {
+        
+        if (ImGui::TreeNode("currentpose")) {
+            if (ImGui::Button("request data##turtlebot")) {
+                this->data_currentpose_request();
+            }
+            ImGui::SameLine();
+            ImGui::Checkbox("subscribe##turtlebot-currentpose", &subscribe_currentpose_);
+            if (this->data_currentpose_.has_data) {
+                if (ImGui::TreeNodeEx("currentpose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("header", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("stamp", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %d", "sec", this->data_currentpose_.value.header.stamp.sec);
+	ImGui::Text("%s: %u", "nanosec", this->data_currentpose_.value.header.stamp.nanosec);
+	ImGui::TreePop();
+}	ImGui::Text("%s: %s", "frame_id", this->data_currentpose_.value.header.frame_id.c_str());
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "x", this->data_currentpose_.value.pose.position.x);
+	ImGui::Text("%s: %.6f", "y", this->data_currentpose_.value.pose.position.y);
+	ImGui::Text("%s: %.6f", "z", this->data_currentpose_.value.pose.position.z);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("orientation", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "x", this->data_currentpose_.value.pose.orientation.x);
+	ImGui::Text("%s: %.6f", "y", this->data_currentpose_.value.pose.orientation.y);
+	ImGui::Text("%s: %.6f", "z", this->data_currentpose_.value.pose.orientation.z);
+	ImGui::Text("%s: %.6f", "w", this->data_currentpose_.value.pose.orientation.w);
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}	ImGui::TreePop();
+}
+            }
+            else
+                ImGui::Text("%s", "no Data");
+            ImGui::TreePop();
+        }
+        
+    }
+    
     
 	if (this->display_resources_ && ImGui::CollapsingHeader("Resources", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::BeginTable("#turtlebot_resource_table", 2);
@@ -269,7 +442,9 @@ void TurtlebotSkillsetWidget::update()
         
         event_row_authority_to_teleop();
         
-        event_row_auto_Home();
+        event_row_charge_battery();
+        
+        event_row_low_battery();
         
         ImGui::EndTable();
     }
@@ -309,15 +484,45 @@ void TurtlebotSkillsetWidget::update()
             
             if (ImGui::TreeNodeEx("input", ImGuiTreeNodeFlags_DefaultOpen)) {
                 
-                ImGui::InputDouble("x", &this->go_to_input_.x, 0.1, 1.0);
-                
-                ImGui::InputDouble("y", &this->go_to_input_.y, 0.1, 1.0);
-                
-                ImGui::InputDouble("w", &this->go_to_input_.w, 0.1, 1.0);
+                if (ImGui::TreeNodeEx("goalpose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("header", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("stamp", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::InputInt("sec", &this->go_to_input_.goalpose.header.stamp.sec);
+	ImGui::InputInt("nanosec", (int*)&this->go_to_input_.goalpose.header.stamp.nanosec);
+	ImGui::TreePop();
+}	ImGui::InputText("frame_id", &this->go_to_input_.goalpose.header.frame_id, 80);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::InputDouble("x", &this->go_to_input_.goalpose.pose.position.x, 0.1, 1.0);
+	ImGui::InputDouble("y", &this->go_to_input_.goalpose.pose.position.y, 0.1, 1.0);
+	ImGui::InputDouble("z", &this->go_to_input_.goalpose.pose.position.z, 0.1, 1.0);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("orientation", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::InputDouble("x", &this->go_to_input_.goalpose.pose.orientation.x, 0.1, 1.0);
+	ImGui::InputDouble("y", &this->go_to_input_.goalpose.pose.orientation.y, 0.1, 1.0);
+	ImGui::InputDouble("z", &this->go_to_input_.goalpose.pose.orientation.z, 0.1, 1.0);
+	ImGui::InputDouble("w", &this->go_to_input_.goalpose.pose.orientation.w, 0.1, 1.0);
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}	ImGui::TreePop();
+}
                 
                 ImGui::TreePop();
             }
             
+            
+            if (ImGui::TreeNodeEx("progress", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (go_to_progress_.id.compare(go_to_status_.id) == 0) {
+                    
+                    if (ImGui::TreeNodeEx("distance_remaining", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "data", this->go_to_progress_.distance_remaining.data);
+	ImGui::TreePop();
+}
+                    
+                }
+                ImGui::TreePop();
+            }
             
             
             ImGui::Separator();
@@ -356,11 +561,32 @@ void TurtlebotSkillsetWidget::update()
             
             if (ImGui::TreeNodeEx("input", ImGuiTreeNodeFlags_DefaultOpen)) {
                 
-                ImGui::InputDouble("x", &this->get_home_input_.x, 0.1, 1.0);
-                
-                ImGui::InputDouble("y", &this->get_home_input_.y, 0.1, 1.0);
-                
-                ImGui::InputDouble("w", &this->get_home_input_.w, 0.1, 1.0);
+                if (ImGui::TreeNodeEx("initialpose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("header", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("stamp", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::InputInt("sec", &this->get_home_input_.initialpose.header.stamp.sec);
+	ImGui::InputInt("nanosec", (int*)&this->get_home_input_.initialpose.header.stamp.nanosec);
+	ImGui::TreePop();
+}	ImGui::InputText("frame_id", &this->get_home_input_.initialpose.header.frame_id, 80);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::InputDouble("x", &this->get_home_input_.initialpose.pose.pose.position.x, 0.1, 1.0);
+	ImGui::InputDouble("y", &this->get_home_input_.initialpose.pose.pose.position.y, 0.1, 1.0);
+	ImGui::InputDouble("z", &this->get_home_input_.initialpose.pose.pose.position.z, 0.1, 1.0);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("orientation", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::InputDouble("x", &this->get_home_input_.initialpose.pose.pose.orientation.x, 0.1, 1.0);
+	ImGui::InputDouble("y", &this->get_home_input_.initialpose.pose.pose.orientation.y, 0.1, 1.0);
+	ImGui::InputDouble("z", &this->get_home_input_.initialpose.pose.pose.orientation.z, 0.1, 1.0);
+	ImGui::InputDouble("w", &this->get_home_input_.initialpose.pose.pose.orientation.w, 0.1, 1.0);
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}	// generation of double[36] not yet implemented
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}
                 
                 ImGui::TreePop();
             }
@@ -381,11 +607,29 @@ void TurtlebotSkillsetWidget::update()
         
         if (ImGui::TreeNodeEx(" input", ImGuiTreeNodeFlags_DefaultOpen)) {
             
-            ImGui::Text("%s: %.6f", "x", this->go_to_input_.x);
-            
-            ImGui::Text("%s: %.6f", "y", this->go_to_input_.y);
-            
-            ImGui::Text("%s: %.6f", "w", this->go_to_input_.w);
+            if (ImGui::TreeNodeEx("goalpose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("header", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("stamp", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %d", "sec", this->go_to_input_.goalpose.header.stamp.sec);
+	ImGui::Text("%s: %u", "nanosec", this->go_to_input_.goalpose.header.stamp.nanosec);
+	ImGui::TreePop();
+}	ImGui::Text("%s: %s", "frame_id", this->go_to_input_.goalpose.header.frame_id.c_str());
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "x", this->go_to_input_.goalpose.pose.position.x);
+	ImGui::Text("%s: %.6f", "y", this->go_to_input_.goalpose.pose.position.y);
+	ImGui::Text("%s: %.6f", "z", this->go_to_input_.goalpose.pose.position.z);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("orientation", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "x", this->go_to_input_.goalpose.pose.orientation.x);
+	ImGui::Text("%s: %.6f", "y", this->go_to_input_.goalpose.pose.orientation.y);
+	ImGui::Text("%s: %.6f", "z", this->go_to_input_.goalpose.pose.orientation.z);
+	ImGui::Text("%s: %.6f", "w", this->go_to_input_.goalpose.pose.orientation.w);
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}	ImGui::TreePop();
+}
             
             ImGui::TreePop();
         }
@@ -405,11 +649,32 @@ void TurtlebotSkillsetWidget::update()
         
         if (ImGui::TreeNodeEx(" input", ImGuiTreeNodeFlags_DefaultOpen)) {
             
-            ImGui::Text("%s: %.6f", "x", this->get_home_input_.x);
-            
-            ImGui::Text("%s: %.6f", "y", this->get_home_input_.y);
-            
-            ImGui::Text("%s: %.6f", "w", this->get_home_input_.w);
+            if (ImGui::TreeNodeEx("initialpose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("header", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("stamp", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %d", "sec", this->get_home_input_.initialpose.header.stamp.sec);
+	ImGui::Text("%s: %u", "nanosec", this->get_home_input_.initialpose.header.stamp.nanosec);
+	ImGui::TreePop();
+}	ImGui::Text("%s: %s", "frame_id", this->get_home_input_.initialpose.header.frame_id.c_str());
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
+if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "x", this->get_home_input_.initialpose.pose.pose.position.x);
+	ImGui::Text("%s: %.6f", "y", this->get_home_input_.initialpose.pose.pose.position.y);
+	ImGui::Text("%s: %.6f", "z", this->get_home_input_.initialpose.pose.pose.position.z);
+	ImGui::TreePop();
+}if (ImGui::TreeNodeEx("orientation", ImGuiTreeNodeFlags_DefaultOpen)) {
+	ImGui::Text("%s: %.6f", "x", this->get_home_input_.initialpose.pose.pose.orientation.x);
+	ImGui::Text("%s: %.6f", "y", this->get_home_input_.initialpose.pose.pose.orientation.y);
+	ImGui::Text("%s: %.6f", "z", this->get_home_input_.initialpose.pose.pose.orientation.z);
+	ImGui::Text("%s: %.6f", "w", this->get_home_input_.initialpose.pose.pose.orientation.w);
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}	// generation of double[36] not yet implemented
+	ImGui::TreePop();
+}	ImGui::TreePop();
+}
             
             ImGui::TreePop();
         }
@@ -427,5 +692,10 @@ void TurtlebotSkillsetWidget::update()
 }
 
 void TurtlebotSkillsetWidget::process() {
+    
+    if (subscribe_currentpose_)
+        this->create_data_currentpose_subscription();
+    else
+        this->destroy_data_currentpose_subscription();
     
 }

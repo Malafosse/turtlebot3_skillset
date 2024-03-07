@@ -44,6 +44,13 @@ namespace turtlebot_skillset
     void TurtlebotNode::skill_go_to_on_start() {}
     //---------- Invariant ----------
     void TurtlebotNode::skill_go_to_invariant_authority_to_skill_hook() {}
+    void TurtlebotNode::skill_go_to_invariant_battery_ok_hook() {}
+    //---------- Progress ----------
+    turtlebot_skillset_interfaces::msg::SkillGoToProgress TurtlebotNode::skill_go_to_progress_hook() {
+        turtlebot_skillset_interfaces::msg::SkillGoToProgress message;
+        return message;
+        
+    }
     //---------- Interrupt ----------
     void TurtlebotNode::skill_go_to_interrupted_() {
         RCLCPP_DEBUG(this->get_logger(), "skillset 'turtlebot' skill 'GoTo' interrupt");
@@ -53,12 +60,12 @@ namespace turtlebot_skillset
         skill_go_to_state_ = SkillState::Ready;
         // Check effects
         if ((
-             resource_move_->check_next(MoveState::NotMoving)
+             resource_move_->check_next(MoveState::Idle)
             )) {
             // hook
             skill_go_to_interrupt_hook();
             // Set effects
-            resource_move_->set_next(MoveState::NotMoving);
+            resource_move_->set_next(MoveState::Idle);
             message.effect = true;
             // Invariants
             skills_invariants_();
@@ -71,6 +78,18 @@ namespace turtlebot_skillset
         status_pub_->publish(status_message);
     }
     void TurtlebotNode::skill_go_to_interrupt_hook() {}
+    void TurtlebotNode::skill_go_to_on_interrupting() {}
+    bool TurtlebotNode::skill_go_to_interrupted() {
+        mutex_.lock();
+        // Not Interrupting -> finish
+        if (skill_go_to_state_ != SkillState::Interrupting) {            
+            mutex_.unlock();
+            return false;    
+        }
+        skill_go_to_interrupted_();
+        mutex_.unlock();
+        return true;
+    }
     //---------- Success ----------
     bool TurtlebotNode::skill_go_to_success_ok() {
         mutex_.lock();
@@ -88,10 +107,10 @@ namespace turtlebot_skillset
         skill_go_to_state_ = SkillState::Ready;
         // Check if effects fail
         if ((
-             resource_move_->check_next(MoveState::NotMoving)
+             resource_move_->check_next(MoveState::Idle)
             )) {
             // Set effects
-            resource_move_->set_next(MoveState::NotMoving);
+            resource_move_->set_next(MoveState::Idle);
             message.effect = true;
             // Invariants
             skills_invariants_();
@@ -121,10 +140,10 @@ namespace turtlebot_skillset
         skill_go_to_state_ = SkillState::Ready;
         // Check effects
         if ((
-             resource_move_->check_next(MoveState::NotMoving)
+             resource_move_->check_next(MoveState::Idle)
             )) {
             // Set effects
-            resource_move_->set_next(MoveState::NotMoving);
+            resource_move_->set_next(MoveState::Idle);
             message.effect = true;
             // Invariants
             skills_invariants_();
@@ -147,6 +166,8 @@ namespace turtlebot_skillset
         result.not_moving = true;
         
         result.is_initialized = true;
+        
+        result.battery_ok = true;
         result.name = "";
         result.effect = false;
         result.postcondition = true;
@@ -161,11 +182,14 @@ namespace turtlebot_skillset
         result.has_authority = (resource_authority_->current() == AuthorityState::Skill);
         all_success = all_success && result.has_authority;
         // ----- precondition not_moving -----
-        result.not_moving = (resource_move_->current() == MoveState::NotMoving);
+        result.not_moving = (resource_move_->current() == MoveState::Idle);
         all_success = all_success && result.not_moving;
         // ----- precondition is_initialized -----
         result.is_initialized = (resource_home_->current() == HomeState::Initialized);
         all_success = all_success && result.is_initialized;
+        // ----- precondition battery_ok -----
+        result.battery_ok = (resource_battery_status_->current() == BatteryStatusState::Normal);
+        all_success = all_success && result.battery_ok;
         if (!all_success) {
             result.result = turtlebot_skillset_interfaces::msg::SkillGoToResponse::PRECONDITION_FAILURE;
         }
@@ -200,10 +224,25 @@ namespace turtlebot_skillset
             message.result = turtlebot_skillset_interfaces::msg::SkillGoToResponse::INVARIANT_FAILURE;
             // check effects
             if ((
-                 resource_move_->check_next(MoveState::NotMoving)
+                 resource_move_->check_next(MoveState::Idle)
                 )) {
                 skill_go_to_invariant_authority_to_skill_hook();
-                resource_move_->set_next(MoveState::NotMoving);
+                resource_move_->set_next(MoveState::Idle);
+                message.effect = true;
+            }
+        }
+        
+        // ----- invariant battery_ok -----
+        // guard
+        if (!((resource_battery_status_->current() == BatteryStatusState::Normal))) {
+            message.name = "battery_ok";
+            message.result = turtlebot_skillset_interfaces::msg::SkillGoToResponse::INVARIANT_FAILURE;
+            // check effects
+            if ((
+                 resource_move_->check_next(MoveState::Idle)
+                )) {
+                skill_go_to_invariant_battery_ok_hook();
+                resource_move_->set_next(MoveState::Idle);
                 message.effect = true;
             }
         }
@@ -328,7 +367,21 @@ namespace turtlebot_skillset
         this->skill_go_to_on_start();
     }
 
-    
+    void TurtlebotNode::skill_go_to_progress_callback_() {
+        mutex_.lock();
+        if (skill_go_to_state_ == SkillState::Running) {
+            RCLCPP_DEBUG(this->get_logger(), "skillset 'turtlebot' skill 'GoTo' progress");
+            
+            auto message = skill_go_to_progress_hook();
+            message.id = skill_go_to_id_;
+            
+            skill_go_to_progress_pub_->publish(message);
+            // status
+            auto status_message = status_();
+            status_pub_->publish(status_message);
+        }
+        mutex_.unlock();
+    }
 
     void TurtlebotNode::skill_go_to_interrupt_callback_(const turtlebot_skillset_interfaces::msg::SkillInterrupt::UniquePtr msg) {
         mutex_.lock();
@@ -345,9 +398,11 @@ namespace turtlebot_skillset
             return;    
         }
         // if Interrupting
-        skill_go_to_interrupted_();
+        skill_go_to_state_ = SkillState::Interrupting;
         mutex_.unlock();
-        
+        skill_go_to_on_interrupting();
+        return;
+        // if Interrupted
     }
     //-------------------------------------------------- getHome --------------------------------------------------
     const turtlebot_skillset_interfaces::msg::SkillGetHomeInput::SharedPtr TurtlebotNode::skill_get_home_input() const
@@ -390,6 +445,18 @@ namespace turtlebot_skillset
         status_pub_->publish(status_message);
     }
     void TurtlebotNode::skill_get_home_interrupt_hook() {}
+    void TurtlebotNode::skill_get_home_on_interrupting() {}
+    bool TurtlebotNode::skill_get_home_interrupted() {
+        mutex_.lock();
+        // Not Interrupting -> finish
+        if (skill_get_home_state_ != SkillState::Interrupting) {            
+            mutex_.unlock();
+            return false;    
+        }
+        skill_get_home_interrupted_();
+        mutex_.unlock();
+        return true;
+    }
     //---------- Success ----------
     bool TurtlebotNode::skill_get_home_success_ok() {
         mutex_.lock();
@@ -463,7 +530,7 @@ namespace turtlebot_skillset
         result.result = turtlebot_skillset_interfaces::msg::SkillGetHomeResponse::SUCCESS;
         result.not_moving = true;
         
-        result.is_initialized = true;
+        result.is_not_initialized = true;
         result.name = "";
         result.effect = false;
         result.postcondition = true;
@@ -475,11 +542,11 @@ namespace turtlebot_skillset
         bool all_success = true;
         
         // ----- precondition not_moving -----
-        result.not_moving = (resource_move_->current() == MoveState::NotMoving);
+        result.not_moving = (resource_move_->current() == MoveState::Idle);
         all_success = all_success && result.not_moving;
-        // ----- precondition is_initialized -----
-        result.is_initialized = (resource_home_->current() == HomeState::Lost);
-        all_success = all_success && result.is_initialized;
+        // ----- precondition is_not_initialized -----
+        result.is_not_initialized = (resource_home_->current() == HomeState::Lost);
+        all_success = all_success && result.is_not_initialized;
         if (!all_success) {
             result.result = turtlebot_skillset_interfaces::msg::SkillGetHomeResponse::PRECONDITION_FAILURE;
         }
@@ -509,7 +576,7 @@ namespace turtlebot_skillset
         auto message = skill_get_home_response_initialize_();
         // ----- invariant not_moving -----
         // guard
-        if (!((resource_move_->current() == MoveState::NotMoving))) {
+        if (!((resource_move_->current() == MoveState::Idle))) {
             message.name = "not_moving";
             message.result = turtlebot_skillset_interfaces::msg::SkillGetHomeResponse::INVARIANT_FAILURE;
             // check effects
@@ -659,8 +726,10 @@ namespace turtlebot_skillset
             return;    
         }
         // if Interrupting
-        skill_get_home_interrupted_();
+        skill_get_home_state_ = SkillState::Interrupting;
         mutex_.unlock();
-        
+        skill_get_home_on_interrupting();
+        return;
+        // if Interrupted
     }
 }

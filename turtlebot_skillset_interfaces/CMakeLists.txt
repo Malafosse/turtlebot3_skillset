@@ -25,6 +25,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
 #========== GENERIC ==========
@@ -41,13 +42,16 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   # "msg/SkillResult.msg"
   # "msg/SkillTransition.msg"
 #========== SPECIFIC ==========
+# ----- data currentpose -----
+  "msg/DataCurrentpose.msg"
+  "msg/DataCurrentposeResponse.msg"
 
 # ----- Skill GoTo -----
   "msg/SkillGoToInput.msg"
   
   "msg/SkillGoToRequest.msg"
   "msg/SkillGoToResponse.msg"
-  
+  "msg/SkillGoToProgress.msg"
   "msg/SkillGoToStatus.msg"
 # ----- Skill getHome -----
   "msg/SkillGetHomeInput.msg"
@@ -57,7 +61,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   
   "msg/SkillGetHomeStatus.msg"
 
-  DEPENDENCIES builtin_interfaces geometry_msgs
+  DEPENDENCIES builtin_interfaces geometry_msgs std_msgs
 )
 #--------------------------------------------------
 

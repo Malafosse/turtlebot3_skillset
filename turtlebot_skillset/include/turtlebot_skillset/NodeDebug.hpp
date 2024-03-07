@@ -25,6 +25,10 @@ namespace turtlebot_skillset
         std::shared_ptr<rclcpp::ParameterEventHandler> resource_home_handler_;
         std::shared_ptr<rclcpp::ParameterCallbackHandle> resource_home_handle_;
         
+        void resource_battery_status_hook_(const rclcpp::Parameter &parameter);
+        std::shared_ptr<rclcpp::ParameterEventHandler> resource_battery_status_handler_;
+        std::shared_ptr<rclcpp::ParameterCallbackHandle> resource_battery_status_handle_;
+        
     };
 }
 #endif

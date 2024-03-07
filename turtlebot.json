@@ -1,17 +1,17 @@
 {
-    "folder": "./",
     "type": [
         {
-            "name": "Float",
-            "idl": "float64"
-        },
-        {
-            "name": "PoseStamped",
+            "name": "Pose",
             "package": "geometry_msgs",
             "message": "PoseStamped"
         },
         {
-            "name": "PoseWithCovarianceStamped",
+            "name": "Float",
+            "package": "std_msgs",
+            "message": "Float64"
+        },
+        {
+            "name": "InitialPose",
             "package": "geometry_msgs",
             "message": "PoseWithCovarianceStamped"
         }

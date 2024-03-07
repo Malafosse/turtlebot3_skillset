@@ -19,8 +19,12 @@ namespace turtlebot_skillset
             message.response = event_authority_to_teleop_();
         }
         
-        else if (msg->name == "auto_Home") {
-            message.response = event_auto_home_();
+        else if (msg->name == "charge_battery") {
+            message.response = event_charge_battery_();
+        }
+        
+        else if (msg->name == "low_battery") {
+            message.response = event_low_battery_();
         }
         
         event_pub_->publish(message);
@@ -37,7 +41,7 @@ namespace turtlebot_skillset
     {
         // guard
         
-        if (!((resource_move_->current() == MoveState::NotMoving)))
+        if (!((resource_move_->current() == MoveState::Idle)))
         {
             return turtlebot_skillset_interfaces::msg::EventResponse::GUARD_FAILURE;
         }
@@ -122,41 +126,94 @@ namespace turtlebot_skillset
     }
 
     
-    //-------------------------------------------------- auto_Home --------------------------------------------------
+    //-------------------------------------------------- charge_battery --------------------------------------------------
 
-    int TurtlebotNode::event_auto_home_()
+    int TurtlebotNode::event_charge_battery_()
     {
         // guard
+        
+        if (!((resource_battery_status_->current() == BatteryStatusState::Low)))
+        {
+            return turtlebot_skillset_interfaces::msg::EventResponse::GUARD_FAILURE;
+        }
         
         
         // check effects
         if (!(
-             resource_home_->check_next(HomeState::Initialized)
+             resource_battery_status_->check_next(BatteryStatusState::Normal)
         ))
         {
             return turtlebot_skillset_interfaces::msg::EventResponse::EFFECT_FAILURE;
         }
         
         // hook
-        event_auto_home_hook();
+        event_charge_battery_hook();
         // set effects
-        resource_home_->set_next(HomeState::Initialized);
+        resource_battery_status_->set_next(BatteryStatusState::Normal);
         
         skills_invariants_();
         return turtlebot_skillset_interfaces::msg::EventResponse::SUCCESS;
     }
 
-    void TurtlebotNode::event_auto_home_hook()
+    void TurtlebotNode::event_charge_battery_hook()
     {
     }
 
-    void TurtlebotNode::event_auto_home()
+    void TurtlebotNode::event_charge_battery()
     {
         mutex_.lock();
-        RCLCPP_DEBUG(this->get_logger(), "skillset 'Anafi' event 'auto_Home'");
+        RCLCPP_DEBUG(this->get_logger(), "skillset 'Anafi' event 'charge_battery'");
         auto message = turtlebot_skillset_interfaces::msg::EventResponse();
         message.id = info_;
-        message.response = event_auto_home_();
+        message.response = event_charge_battery_();
+        event_pub_->publish(message);
+        // status
+        auto status_message = status_();
+        status_pub_->publish(status_message);
+        mutex_.unlock();
+    }
+
+    
+    //-------------------------------------------------- low_battery --------------------------------------------------
+
+    int TurtlebotNode::event_low_battery_()
+    {
+        // guard
+        
+        if (!((resource_battery_status_->current() == BatteryStatusState::Normal)))
+        {
+            return turtlebot_skillset_interfaces::msg::EventResponse::GUARD_FAILURE;
+        }
+        
+        
+        // check effects
+        if (!(
+             resource_battery_status_->check_next(BatteryStatusState::Low)
+        ))
+        {
+            return turtlebot_skillset_interfaces::msg::EventResponse::EFFECT_FAILURE;
+        }
+        
+        // hook
+        event_low_battery_hook();
+        // set effects
+        resource_battery_status_->set_next(BatteryStatusState::Low);
+        
+        skills_invariants_();
+        return turtlebot_skillset_interfaces::msg::EventResponse::SUCCESS;
+    }
+
+    void TurtlebotNode::event_low_battery_hook()
+    {
+    }
+
+    void TurtlebotNode::event_low_battery()
+    {
+        mutex_.lock();
+        RCLCPP_DEBUG(this->get_logger(), "skillset 'Anafi' event 'low_battery'");
+        auto message = turtlebot_skillset_interfaces::msg::EventResponse();
+        message.id = info_;
+        message.response = event_low_battery_();
         event_pub_->publish(message);
         // status
         auto status_message = status_();

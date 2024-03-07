@@ -23,48 +23,62 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-#find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(turtlebot_skillset_interfaces REQUIRED)
 find_package(turtlebot_skillset REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(rclcpp_action REQUIRED)
+
+#find_package(unique_identifier_msgs REQUIRED)
 #--------------------------------------------------
 
-include_directories(include)
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${rclcpp_INCLUDE_DIRS}
+  ${std_msgs_INCLUDE_DIRS}
+  ${rclcpp_action_INCLUDE_DIRS}
+  ${nav2_msgs_INCLUDE_DIRS}
+  ${geometry_msgs_INCLUDE_DIRS}
+ # ${unique_identifier_msgs_INCLUDE_DIRS}
+  ${turtlebot_skillset_interfaces_INCLUDE_DIRS}
+  ${turtlebot_skillset_INCLUDE_DIRS}
+)
 
 #--------------------------------------------------------------------
 
-add_library(tb3_skillset_lib
+add_library(tb3_skillset
   src/Node.cpp
+  
 )
 
-target_link_libraries(tb3_skillset_lib
+target_link_libraries(tb3_skillset
   ${rclcpp_LIBRARIES}
   ${std_msgs_LIBRARIES}
+  ${rclcpp_action_LIBRARIES}
   ${nav2_msgs_LIBRARIES}
   ${geometry_msgs_LIBRARIES}
-  ${rclcpp_action_LIBRARIES}
+  #${unique_identifier_msgs_LIBRARIES}
   ${turtlebot_skillset_interfaces_LIBRARIES}
   ${turtlebot_skillset_LIBRARIES}
 )
 
-ament_target_dependencies(tb3_skillset_lib 
+ament_target_dependencies(tb3_skillset 
   rclcpp 
-  std_msgs  
+  std_msgs 
   rclcpp_action
+  turtlebot_skillset_interfaces 
+  turtlebot_skillset
   nav2_msgs
   geometry_msgs
-  turtlebot_skillset_interfaces 
-  turtlebot_skillset)
+)
 
 install(DIRECTORY include/
   DESTINATION include)
 
 install(
-  TARGETS tb3_skillset_lib
-  EXPORT tb3_skillset_lib
+  TARGETS tb3_skillset
+  EXPORT tb3_skillset
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -78,27 +92,18 @@ add_library(tb3_skillset_debug
   src/Node.cpp
 )
 
-target_link_libraries(tb3_skillset_debug
-  ${rclcpp_LIBRARIES}
-  ${std_msgs_LIBRARIES}
-  ${nav2_msgs_LIBRARIES}
-  ${geometry_msgs_LIBRARIES}
-  ${rclcpp_action_LIBRARIES}
-  ${turtlebot_skillset_interfaces_LIBRARIES}
-  ${turtlebot_skillset_LIBRARIES}
-)
 
 target_compile_definitions(tb3_skillset_debug PUBLIC SKILLSET_DEBUG_MODE)
 target_link_libraries(tb3_skillset_debug)
-
 ament_target_dependencies(tb3_skillset_debug 
   rclcpp 
   std_msgs 
   rclcpp_action
+  turtlebot_skillset_interfaces 
+  turtlebot_skillset
   nav2_msgs
   geometry_msgs
-  turtlebot_skillset_interfaces 
-  turtlebot_skillset)
+)
 
 install(
   TARGETS tb3_skillset_debug
@@ -113,7 +118,7 @@ install(
 
 add_executable(tb3_skillset_node src/tb3_skillset_node.cpp)
 target_link_libraries(tb3_skillset_node
-  tb3_skillset_lib
+  tb3_skillset
 )
 install(TARGETS
   tb3_skillset_node
@@ -132,9 +137,9 @@ install(TARGETS
 
 #--------------------------------------------------------------------
 
-set(PROJECT_LIBS tb3_skillset_lib)
+set(PROJECT_LIBS tb3_skillset)
 
-ament_export_targets(tb3_skillset_lib)
+ament_export_targets(tb3_skillset)
 
 #--------------------------------------------------------------------
 

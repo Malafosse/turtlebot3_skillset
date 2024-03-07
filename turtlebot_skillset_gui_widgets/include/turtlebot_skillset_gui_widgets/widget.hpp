@@ -15,17 +15,13 @@ class TurtlebotSkillsetWidget: public TurtlebotSkillsetClient
     
     void display_start_go_to();
     inline void set_go_to_inputs(turtlebot_skillset_interfaces::msg::SkillGoToInput input) { go_to_input_ = input; };
-    inline void set_go_to_input_x(double input) { go_to_input_.x = input; };
-    inline void set_go_to_input_y(double input) { go_to_input_.y = input; };
-    inline void set_go_to_input_w(double input) { go_to_input_.w = input; };
+    inline void set_go_to_input_goalpose(geometry_msgs::msg::PoseStamped input) { go_to_input_.goalpose = input; };
     
     
     
     void display_start_get_home();
     inline void set_get_home_inputs(turtlebot_skillset_interfaces::msg::SkillGetHomeInput input) { get_home_input_ = input; };
-    inline void set_get_home_input_x(double input) { get_home_input_.x = input; };
-    inline void set_get_home_input_y(double input) { get_home_input_.y = input; };
-    inline void set_get_home_input_w(double input) { get_home_input_.w = input; };
+    inline void set_get_home_input_initialpose(geometry_msgs::msg::PoseWithCovarianceStamped input) { get_home_input_.initialpose = input; };
     
     
     
@@ -41,13 +37,18 @@ class TurtlebotSkillsetWidget: public TurtlebotSkillsetClient
     void event_row_authority_to_teleop();
     void event_button_authority_to_teleop();
     
-    void event_row_auto_Home();
-    void event_button_auto_Home();
+    void event_row_charge_battery();
+    void event_button_charge_battery();
+    
+    void event_row_low_battery();
+    void event_button_low_battery();
     
     double event_response_timeout_;
 
     void skill_response_text(int result_code); 
     void skill_state_button(std::string skill, unsigned int state);
+    
+    bool subscribe_currentpose_;
     
     
     bool active_go_to_;

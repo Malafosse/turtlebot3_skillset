@@ -6,9 +6,11 @@ namespace turtlebot_skillset
     TurtlebotNode::TurtlebotNode(const std::string node_name, const std::string info)
         : Node(node_name)
         , info_(info)
+        , data_currentpose_stamp_(0)
         , resource_authority_(std::make_shared<Authority>())
         , resource_move_(std::make_shared<Move>())
         , resource_home_(std::make_shared<Home>())
+        , resource_battery_status_(std::make_shared<BatteryStatus>())
         , skill_go_to_state_(SkillState::Ready)
         , skill_go_to_id_("")
         , skill_go_to_input_(std::make_shared<turtlebot_skillset_interfaces::msg::SkillGoToInput>()) 
@@ -36,6 +38,17 @@ namespace turtlebot_skillset
         event_pub_ = this->create_publisher<turtlebot_skillset_interfaces::msg::EventResponse>(
             "~/turtlebot_skillset/event_response", qos_event);
         //-------------------- Data --------------------
+        //---------- Data currentpose ----------
+        data_currentpose_pub_ = this->create_publisher<turtlebot_skillset_interfaces::msg::DataCurrentpose>(
+            "~/turtlebot_skillset/data/currentpose", qos_hard);
+        
+        data_currentpose_request_sub_ = this->create_subscription<turtlebot_skillset_interfaces::msg::DataRequest>(
+            "~/turtlebot_skillset/data/currentpose/request", qos_event, 
+            [this](turtlebot_skillset_interfaces::msg::DataRequest::UniquePtr msg) { 
+                this->TurtlebotNode::data_currentpose_request_callback_(std::move(msg)); 
+            });
+        data_currentpose_response_pub_ = this->create_publisher<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>(
+            "~/turtlebot_skillset/data/currentpose/response", qos_event);
         
         //-------------------- Skill --------------------
         
@@ -47,7 +60,13 @@ namespace turtlebot_skillset
             });
         skill_go_to_response_pub_ = this->create_publisher<turtlebot_skillset_interfaces::msg::SkillGoToResponse>(
             "~/turtlebot_skillset/skill/go_to/response", qos_event);
-        
+        skill_go_to_progress_pub_ = this->create_publisher<turtlebot_skillset_interfaces::msg::SkillGoToProgress>(
+            "~/turtlebot_skillset/skill/go_to/progress", qos_soft);
+        skill_go_to_progress_timer_ = this->create_wall_timer(
+            1000ms, 
+            [this](){
+                this->skill_go_to_progress_callback_();
+            });
         skill_go_to_interrupt_sub_ = this->create_subscription<turtlebot_skillset_interfaces::msg::SkillInterrupt>(
             "~/turtlebot_skillset/skill/go_to/interrupt", qos_event, 
             [this](turtlebot_skillset_interfaces::msg::SkillInterrupt::UniquePtr msg) { 
@@ -79,18 +98,23 @@ namespace turtlebot_skillset
         auto rs = turtlebot_skillset_interfaces::msg::ResourceState();
         
         rs = turtlebot_skillset_interfaces::msg::ResourceState();
-        rs.name = "Authority";
+        rs.name = "authority";
         rs.state = to_string(resource_authority_->current());
         message.resources.push_back(rs);
         
         rs = turtlebot_skillset_interfaces::msg::ResourceState();
-        rs.name = "Move";
+        rs.name = "move";
         rs.state = to_string(resource_move_->current());
         message.resources.push_back(rs);
         
         rs = turtlebot_skillset_interfaces::msg::ResourceState();
-        rs.name = "Home";
+        rs.name = "home";
         rs.state = to_string(resource_home_->current());
+        message.resources.push_back(rs);
+        
+        rs = turtlebot_skillset_interfaces::msg::ResourceState();
+        rs.name = "battery_status";
+        rs.state = to_string(resource_battery_status_->current());
         message.resources.push_back(rs);
         
         // skills
@@ -186,6 +210,19 @@ namespace turtlebot_skillset
     std::string TurtlebotNode::get_home_state_hook()
     {
         std::string state = to_string(resource_home_->current());
+        return state;
+    }
+    
+    std::string TurtlebotNode::get_battery_status_state()
+    {
+        mutex_.lock();
+        std::string state = to_string(resource_battery_status_->current());
+        mutex_.unlock();
+        return state;
+    }
+    std::string TurtlebotNode::get_battery_status_state_hook()
+    {
+        std::string state = to_string(resource_battery_status_->current());
         return state;
     }
     

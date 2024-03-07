@@ -15,6 +15,8 @@ TurtlebotSkillsetClient::TurtlebotSkillsetClient(const std::string &name, rclcpp
     
     resource_state_["home"] = "";
     
+    resource_state_["battery_status"] = "";
+    
     qos_best_.best_effort();
     qos_best_.durability_volatile();
     qos_reliable_.reliable();
@@ -30,6 +32,11 @@ TurtlebotSkillsetClient::TurtlebotSkillsetClient(const std::string &name, rclcpp
     event_sub_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::EventResponse>(
         name+"/turtlebot_skillset/event_response", qos_reliable_, std::bind(&TurtlebotSkillsetClient::event_callback_, this, std::placeholders::_1));
     
+    data_currentpose_pub_ = node_->create_publisher<turtlebot_skillset_interfaces::msg::DataRequest>(
+        name+"/turtlebot_skillset/data/currentpose/request", qos_reliable_);
+    data_currentpose_response_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>(
+        name+"/turtlebot_skillset/data/currentpose/response", qos_reliable_, std::bind(&TurtlebotSkillsetClient::data_currentpose_response_callback_, this, std::placeholders::_1));
+    
     
     go_to_result_.id = "00000000";
     go_to_status_.id = "";
@@ -38,6 +45,9 @@ TurtlebotSkillsetClient::TurtlebotSkillsetClient(const std::string &name, rclcpp
         name+"/turtlebot_skillset/skill/go_to/request", qos_reliable_);
     go_to_interrupt_pub_ = node_->create_publisher<turtlebot_skillset_interfaces::msg::SkillInterrupt>(
         name+"/turtlebot_skillset/skill/go_to/interrupt", qos_reliable_);
+    
+    go_to_progress_sub_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::SkillGoToProgress>(
+        name+"/turtlebot_skillset/skill/go_to/progress", qos_best_, std::bind(&TurtlebotSkillsetClient::go_to_progress_callback, this, std::placeholders::_1));
     
     go_to_response_sub_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::SkillGoToResponse>(
         name+"/turtlebot_skillset/skill/go_to/response", qos_reliable_, std::bind(&TurtlebotSkillsetClient::go_to_response_callback, this, std::placeholders::_1));
@@ -59,23 +69,30 @@ TurtlebotSkillsetClient::TurtlebotSkillsetClient(const std::string &name, rclcpp
     
     events_stamps_["authority_to_teleop"] = now;
     
-    events_stamps_["auto_Home"] = now;
+    events_stamps_["charge_battery"] = now;
+    
+    events_stamps_["low_battery"] = now;
     
     
     turtlebot_skillset_interfaces::msg::ResourceState r_authority;
-    r_authority.name = "Authority"; 
+    r_authority.name = "authority"; 
     r_authority.state = "";
     status_.resources.push_back(r_authority);
     
     turtlebot_skillset_interfaces::msg::ResourceState r_move;
-    r_move.name = "Move"; 
+    r_move.name = "move"; 
     r_move.state = "";
     status_.resources.push_back(r_move);
     
     turtlebot_skillset_interfaces::msg::ResourceState r_home;
-    r_home.name = "Home"; 
+    r_home.name = "home"; 
     r_home.state = "";
     status_.resources.push_back(r_home);
+    
+    turtlebot_skillset_interfaces::msg::ResourceState r_battery_status;
+    r_battery_status.name = "battery_status"; 
+    r_battery_status.state = "";
+    status_.resources.push_back(r_battery_status);
     
     status_pub_->publish(std_msgs::msg::Empty());
 }
@@ -171,9 +188,52 @@ double TurtlebotSkillsetClient::time_since_event(std::string event) const {
 }
 
 
+//-----------------------------------------------------------------------------
+void TurtlebotSkillsetClient::data_currentpose_response_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentposeResponse::SharedPtr msg) {
+    RCLCPP_INFO(node_->get_logger(), "[%s] received data 'currentpose' response %s", 
+        name_.c_str(), msg->id.c_str());
+    this->data_currentpose_.has_data = msg->has_data;
+    this->data_currentpose_.value = msg->value;
+}
+
+void TurtlebotSkillsetClient::data_currentpose_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentpose::SharedPtr msg) {
+    RCLCPP_DEBUG(node_->get_logger(), "[%s] received data 'currentpose'", name_.c_str());
+    this->data_currentpose_.has_data = true;
+    this->data_currentpose_.value = msg->value;
+}
+
+std::string TurtlebotSkillsetClient::data_currentpose_request() {
+    turtlebot_skillset_interfaces::msg::DataRequest request;
+    request.id = generate_id();
+    this->data_currentpose_pub_->publish(request);
+    return request.id;
+}
+
+void TurtlebotSkillsetClient::create_data_currentpose_subscription() {
+    if (! data_currentpose_sub_) {
+        RCLCPP_INFO(node_->get_logger(), "[%s] create subsription to data 'currentpose'", name_.c_str());
+        data_currentpose_sub_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::DataCurrentpose>(
+            name_+"/turtlebot_skillset/data/currentpose", qos_reliable_, 
+            std::bind(&TurtlebotSkillsetClient::data_currentpose_callback_, this, std::placeholders::_1));
+    }
+}
+
+void TurtlebotSkillsetClient::destroy_data_currentpose_subscription() {
+    if (data_currentpose_sub_) {
+        RCLCPP_INFO(node_->get_logger(), "[%s] reset subsription to data 'currentpose'", name_.c_str());
+        data_currentpose_sub_.reset();
+    }
+}
+
 
 
 //-----------------------------------------------------------------------------
+
+void TurtlebotSkillsetClient::go_to_progress_callback(const turtlebot_skillset_interfaces::msg::SkillGoToProgress::SharedPtr msg) {
+    RCLCPP_DEBUG(node_->get_logger(), "[%s] received skill 'go_to' progress %s", 
+        name_.c_str(), msg->id.c_str());
+    this->go_to_progress_ = *msg;
+}
 
 void TurtlebotSkillsetClient::go_to_response_callback(const turtlebot_skillset_interfaces::msg::SkillGoToResponse::SharedPtr msg) {
     RCLCPP_INFO(this->node_->get_logger(), "[%s] received GoTo %s result %d %s", 

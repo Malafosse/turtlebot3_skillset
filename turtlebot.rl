@@ -1,96 +1,113 @@
-type Float
+type{
+    Float
+    Pose
+    InitialPose
+}
 
 skillset turtlebot {
 
-    data {
-        //TBD
-    }
+    data currentpose: Pose
 
     resource {
-        Authority {
+        authority {
             state { Teleop Skill }
             initial Teleop
             transition all
         }
-        Move {
-            state { Moving NotMoving }
-            initial NotMoving
+        move {
+            state { Moving Idle }
+            initial Idle
             transition all
         }
-        Home {
+        home {
             state { Lost Initializing Initialized }
             initial Lost
+            transition all
+        }
+        battery_status {
+            state { Low Normal }
+            initial Normal
             transition all
         }
     }
 
     event {
         authority_to_skill {
-            guard Move == NotMoving
-            effect Authority -> Skill
+            guard move == Idle
+            effect authority -> Skill
         }
         authority_to_teleop {
-            effect Authority -> Teleop
+            effect authority -> Teleop
         }
-        auto_Home {
-            effect Home -> Initialized
+        charge_battery {
+            guard battery_status == Low
+            effect battery_status -> Normal
+        }
+        low_battery {
+            guard battery_status == Normal
+            effect battery_status -> Low
         }
     }
 
-    skill GoTo {
+    skill GoTo { // Go to a goal pose
         input {
-            // 2D waypoint for now
-            x: Float
-            y: Float
-            w: Float
+            goalpose: Pose 
         }
         precondition {
-            has_authority: Authority == Skill
-            not_moving: Move == NotMoving
-            is_initialized: Home == Initialized
+            has_authority: authority == Skill
+            not_moving: move == Idle
+            is_initialized: home == Initialized
+            battery_ok: battery_status == Normal
         }
-        start Move -> Moving
-        invariant authority_to_skill {
-            guard Authority == Skill and Home == Initialized 
-            effect Move -> NotMoving
+        start move -> Moving
+        invariant {
+            authority_to_skill {
+                guard authority == Skill and home == Initialized 
+                effect move -> Idle
+            }
+            battery_ok {
+                guard battery_status == Normal
+                effect move -> Idle
+            }
         }
+        progress {
+            period 1.0
+            output distance_remaining: Float
+            }
         interrupt {
-            interrupting false
-            effect Move -> NotMoving
+            interrupting true
+            effect move -> Idle
         }
         success ok {
-            effect Move -> NotMoving
+            effect move -> Idle
         }
         failure ko {
-            effect Move -> NotMoving
+            effect move -> Idle
         }
     }
 
-    skill getHome {
+    skill getHome { // Initialize the robot's position on the map
         input {
-            x: Float
-            y: Float
-            w: Float
+            initialpose: InitialPose
         }
         precondition{
-            not_moving: Move == NotMoving
-            is_initialized: Home == Lost
+            not_moving: move == Idle
+            is_not_initialized: home == Lost
         }
-        start Home -> Initializing
+        start home -> Initializing
         invariant not_moving {
-            guard Move == NotMoving
-            effect Home -> Lost
+            guard move == Idle
+            effect home -> Lost
         }
         interrupt {
-            interrupting false
-            effect Home -> Lost
+            interrupting true
+            effect home -> Lost
         }
         success ok {
-            effect Home -> Initialized
+            effect home -> Initialized
         }
         failure ko {
-            effect Home -> Lost
+            effect home -> Lost
         }
-
     }
 }

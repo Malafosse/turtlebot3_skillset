@@ -39,7 +39,7 @@ namespace turtlebot_skillset
         T current_;
     };
 
-    //------------------------- Authority -------------------------
+    //------------------------- authority -------------------------
     enum class AuthorityState
     {
         Teleop, Skill, 
@@ -51,31 +51,31 @@ namespace turtlebot_skillset
         Authority() : Resource(AuthorityState::Teleop) {}
         ~Authority() {}
 
-        inline std::string name() const { return std::string("Authority"); };
+        inline std::string name() const { return std::string("authority"); };
         std::vector<AuthorityState> states() const;
         std::vector<Arc<AuthorityState>> transitions() const;
         bool check_next(AuthorityState dst) const;
     };
 
-    //------------------------- Move -------------------------
+    //------------------------- move -------------------------
     enum class MoveState
     {
-        Moving, NotMoving, 
+        Moving, Idle, 
     };
 
     class Move : public Resource<MoveState>
     {
     public:
-        Move() : Resource(MoveState::NotMoving) {}
+        Move() : Resource(MoveState::Idle) {}
         ~Move() {}
 
-        inline std::string name() const { return std::string("Move"); };
+        inline std::string name() const { return std::string("move"); };
         std::vector<MoveState> states() const;
         std::vector<Arc<MoveState>> transitions() const;
         bool check_next(MoveState dst) const;
     };
 
-    //------------------------- Home -------------------------
+    //------------------------- home -------------------------
     enum class HomeState
     {
         Lost, Initializing, Initialized, 
@@ -87,10 +87,28 @@ namespace turtlebot_skillset
         Home() : Resource(HomeState::Lost) {}
         ~Home() {}
 
-        inline std::string name() const { return std::string("Home"); };
+        inline std::string name() const { return std::string("home"); };
         std::vector<HomeState> states() const;
         std::vector<Arc<HomeState>> transitions() const;
         bool check_next(HomeState dst) const;
+    };
+
+    //------------------------- battery_status -------------------------
+    enum class BatteryStatusState
+    {
+        Low, Normal, 
+    };
+
+    class BatteryStatus : public Resource<BatteryStatusState>
+    {
+    public:
+        BatteryStatus() : Resource(BatteryStatusState::Normal) {}
+        ~BatteryStatus() {}
+
+        inline std::string name() const { return std::string("battery_status"); };
+        std::vector<BatteryStatusState> states() const;
+        std::vector<Arc<BatteryStatusState>> transitions() const;
+        bool check_next(BatteryStatusState dst) const;
     };
 
     
@@ -105,6 +123,9 @@ std::ostream &operator<<(std::ostream &out, const turtlebot_skillset::MoveState 
 
 std::string to_string(const turtlebot_skillset::HomeState &x);
 std::ostream &operator<<(std::ostream &out, const turtlebot_skillset::HomeState &x);
+
+std::string to_string(const turtlebot_skillset::BatteryStatusState &x);
+std::ostream &operator<<(std::ostream &out, const turtlebot_skillset::BatteryStatusState &x);
 
 
 #endif

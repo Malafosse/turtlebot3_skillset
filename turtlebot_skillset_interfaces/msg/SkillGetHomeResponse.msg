@@ -11,7 +11,7 @@ string id
 uint8  result        # cf. constant
 # Preconditions
 bool not_moving
-bool is_initialized
+bool is_not_initialized
 # Terminate
 string name          # terminate mode or precondition/invariant failure
 bool   effect        # if effect succeed or true if none

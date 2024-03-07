@@ -1,3 +1,4 @@
 # Generated from turtlebot.rl:52:10
 string id
-SkillGoToInput input
+std_msgs/Float64 distance_remaining
+

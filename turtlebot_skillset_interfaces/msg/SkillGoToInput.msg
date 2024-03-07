@@ -1,5 +1,3 @@
-# Generated from turtlebot.rl:40:10
-float64 x
-float64 y
-float64 w
+# Generated from turtlebot.rl:52:10
+geometry_msgs/PoseStamped goalpose
 

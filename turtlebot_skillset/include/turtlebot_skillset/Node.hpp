@@ -21,12 +21,15 @@
 #include "turtlebot_skillset_interfaces/msg/event_request.hpp"
 #include "turtlebot_skillset_interfaces/msg/event_response.hpp"
 #include "turtlebot_skillset_interfaces/msg/skill_interrupt.hpp"
+#include "turtlebot_skillset_interfaces/msg/data_currentpose.hpp"
+#include "turtlebot_skillset_interfaces/msg/data_currentpose_response.hpp"
 
 
 #include "turtlebot_skillset_interfaces/msg/skill_go_to_input.hpp"
 #include "turtlebot_skillset_interfaces/msg/skill_go_to_request.hpp"
 #include "turtlebot_skillset_interfaces/msg/skill_go_to_response.hpp"
-
+#include "turtlebot_skillset_interfaces/msg/skill_go_to_progress.hpp"
+#include "turtlebot_skillset_interfaces/msg/skill_go_to_status.hpp"
 
 #include "turtlebot_skillset_interfaces/msg/skill_get_home_input.hpp"
 #include "turtlebot_skillset_interfaces/msg/skill_get_home_request.hpp"
@@ -62,6 +65,11 @@ namespace turtlebot_skillset
 
     protected:
         //-------------------- Data --------------------
+        //----- currentpose -----
+        turtlebot_skillset_interfaces::msg::DataCurrentpose get_data_currentpose();
+        void set_data_currentpose(geometry_msgs::msg::PoseStamped data);
+        turtlebot_skillset_interfaces::msg::DataCurrentpose get_data_currentpose_hook();
+        void set_data_currentpose_hook(geometry_msgs::msg::PoseStamped data);
         
         //-------------------- Resource --------------------
         std::string get_authority_state();
@@ -70,6 +78,8 @@ namespace turtlebot_skillset
         std::string get_move_state_hook();
         std::string get_home_state();
         std::string get_home_state_hook();
+        std::string get_battery_status_state();
+        std::string get_battery_status_state_hook();
         
         //-------------------- Status --------------------
         turtlebot_skillset_interfaces::msg::SkillsetStatus get_skillset_status();
@@ -78,8 +88,10 @@ namespace turtlebot_skillset
         void event_authority_to_skill();
         virtual void event_authority_to_teleop_hook();
         void event_authority_to_teleop();
-        virtual void event_auto_home_hook();
-        void event_auto_home();
+        virtual void event_charge_battery_hook();
+        void event_charge_battery();
+        virtual void event_low_battery_hook();
+        void event_low_battery();
         
         //-------------------- Skill GoTo --------------------
         const turtlebot_skillset_interfaces::msg::SkillGoToInput::SharedPtr skill_go_to_input() const; 
@@ -88,7 +100,12 @@ namespace turtlebot_skillset
         virtual void skill_go_to_start_hook();
         virtual void skill_go_to_on_start();
         virtual void skill_go_to_invariant_authority_to_skill_hook();
+        virtual void skill_go_to_invariant_battery_ok_hook();
+        virtual turtlebot_skillset_interfaces::msg::SkillGoToProgress skill_go_to_progress_hook();
+        inline std::chrono::milliseconds skill_go_to_progress_period() const { return 1000ms; }
         virtual void skill_go_to_interrupt_hook();
+        virtual void skill_go_to_on_interrupting();
+        bool skill_go_to_interrupted();
         bool skill_go_to_success_ok();
         bool skill_go_to_failure_ko();
         
@@ -100,6 +117,8 @@ namespace turtlebot_skillset
         virtual void skill_get_home_on_start();
         virtual void skill_get_home_invariant_not_moving_hook();
         virtual void skill_get_home_interrupt_hook();
+        virtual void skill_get_home_on_interrupting();
+        bool skill_get_home_interrupted();
         bool skill_get_home_success_ok();
         bool skill_get_home_failure_ko();
         
@@ -109,7 +128,8 @@ namespace turtlebot_skillset
         //-------------------- Event --------------------
         int event_authority_to_skill_();
         int event_authority_to_teleop_();
-        int event_auto_home_();
+        int event_charge_battery_();
+        int event_low_battery_();
         void skills_invariants_();
         //-------------------- Skill --------------------
         turtlebot_skillset_interfaces::msg::SkillGoToResponse skill_go_to_response_initialize_() const;
@@ -127,8 +147,12 @@ namespace turtlebot_skillset
         void status_callback_(const std_msgs::msg::Empty::UniquePtr msg);
         // void data_callback_(const std_msgs::msg::String::UniquePtr msg);
         void event_callback_(const turtlebot_skillset_interfaces::msg::EventRequest::UniquePtr msg);
+        //---------- currentpose ----------
+        
+        void data_currentpose_request_callback_(const turtlebot_skillset_interfaces::msg::DataRequest::UniquePtr msg);
+        
         //---------- GoTo ----------
-        void skill_go_to_callback_(const turtlebot_skillset_interfaces::msg::SkillGoToRequest::UniquePtr msg);
+        void skill_go_to_callback_(const turtlebot_skillset_interfaces::msg::SkillGoToRequest::UniquePtr msg);void skill_go_to_progress_callback_();
         void skill_go_to_interrupt_callback_(const turtlebot_skillset_interfaces::msg::SkillInterrupt::UniquePtr msg);
         //---------- getHome ----------
         void skill_get_home_callback_(const turtlebot_skillset_interfaces::msg::SkillGetHomeRequest::UniquePtr msg);
@@ -138,11 +162,18 @@ namespace turtlebot_skillset
         std::string info_;
 
         //---------- Data ----------
+        rclcpp::Time data_currentpose_stamp_;
+        geometry_msgs::msg::PoseStamped data_currentpose_;
+        rclcpp::Publisher<turtlebot_skillset_interfaces::msg::DataCurrentpose>::SharedPtr data_currentpose_pub_;
+        
+        rclcpp::Subscription<turtlebot_skillset_interfaces::msg::DataRequest>::SharedPtr data_currentpose_request_sub_;
+        rclcpp::Publisher<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>::SharedPtr data_currentpose_response_pub_;
         
         //---------- Resource ----------
         std::shared_ptr<Authority> resource_authority_;
         std::shared_ptr<Move> resource_move_;
         std::shared_ptr<Home> resource_home_;
+        std::shared_ptr<BatteryStatus> resource_battery_status_;
         
         //---------- Topics ----------
         rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr status_sub_;
@@ -158,7 +189,8 @@ namespace turtlebot_skillset
         turtlebot_skillset_interfaces::msg::SkillGoToInput::SharedPtr skill_go_to_input_;
         rclcpp::Subscription<turtlebot_skillset_interfaces::msg::SkillGoToRequest>::SharedPtr skill_go_to_request_sub_;
         rclcpp::Subscription<turtlebot_skillset_interfaces::msg::SkillInterrupt>::SharedPtr skill_go_to_interrupt_sub_;
-        rclcpp::Publisher<turtlebot_skillset_interfaces::msg::SkillGoToResponse>::SharedPtr skill_go_to_response_pub_;
+        rclcpp::Publisher<turtlebot_skillset_interfaces::msg::SkillGoToResponse>::SharedPtr skill_go_to_response_pub_;rclcpp::Publisher<turtlebot_skillset_interfaces::msg::SkillGoToProgress>::SharedPtr skill_go_to_progress_pub_;
+        rclcpp::TimerBase::SharedPtr skill_go_to_progress_timer_;
         //---------- getHome ----------
         SkillState skill_get_home_state_;
         std::string skill_get_home_id_;

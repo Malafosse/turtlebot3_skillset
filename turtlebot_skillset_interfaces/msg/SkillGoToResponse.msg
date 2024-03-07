@@ -13,6 +13,7 @@ uint8  result        # cf. constant
 bool has_authority
 bool not_moving
 bool is_initialized
+bool battery_ok
 # Terminate
 string name          # terminate mode or precondition/invariant failure
 bool   effect        # if effect succeed or true if none
