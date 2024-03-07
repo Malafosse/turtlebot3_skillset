@@ -47,6 +47,9 @@ skillset turtlebot {
             guard battery_status == Normal
             effect battery_status -> Low
         }
+        reinitialize_home {
+            effect home -> Lost
+        }
     }
 
     skill GoTo { // Go to a goal pose
@@ -95,13 +98,8 @@ skillset turtlebot {
             is_not_initialized: home == Lost
         }
         start home -> Initializing
-        invariant not_moving {
-            guard move == Idle
-            effect home -> Lost
-        }
         interrupt {
-            interrupting true
-            effect home -> Lost
+            interrupting false  // This skill cannot be interrupted
         }
         success ok {
             effect home -> Initialized

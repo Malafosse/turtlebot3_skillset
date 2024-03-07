@@ -73,6 +73,8 @@ TurtlebotSkillsetClient::TurtlebotSkillsetClient(const std::string &name, rclcpp
     
     events_stamps_["low_battery"] = now;
     
+    events_stamps_["reinitialize_home"] = now;
+    
     
     turtlebot_skillset_interfaces::msg::ResourceState r_authority;
     r_authority.name = "authority"; 

@@ -43,6 +43,9 @@ class TurtlebotSkillsetWidget: public TurtlebotSkillsetClient
     void event_row_low_battery();
     void event_button_low_battery();
     
+    void event_row_reinitialize_home();
+    void event_button_reinitialize_home();
+    
     double event_response_timeout_;
 
     void skill_response_text(int result_code); 

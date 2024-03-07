@@ -13,7 +13,7 @@ from .qos import *
 class Events:
     def __init__(self, skillset_manager: str, node: rclpy.node.Node) -> None:
         self.__node = node
-        self.__events = ["authority_to_skill", "authority_to_teleop", "charge_battery", "low_battery"]
+        self.__events = ["authority_to_skill", "authority_to_teleop", "charge_battery", "low_battery", "reinitialize_home"]
         self.__thread_events : Dict[str, threading.Event] = defaultdict(threading.Event)
         self.__responses : Dict[str, EventResponse] = dict()
         self.__event_response = node.create_subscription(EventResponse,
@@ -58,6 +58,11 @@ class Events:
     @property
     def low_battery(self) -> Callable[[], int]:
         return partial(self.__event, 'low_battery')
+    
+    
+    @property
+    def reinitialize_home(self) -> Callable[[], int]:
+        return partial(self.__event, 'reinitialize_home')
     
     
 

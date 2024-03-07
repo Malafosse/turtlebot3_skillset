@@ -2,9 +2,15 @@
 
 using namespace std::placeholders;
 
-Tb3SkillsetNode::Tb3SkillsetNode() : SKILLSET_NODE("skillset_manager", "turtlebot"){}
+Tb3SkillsetNode::Tb3SkillsetNode() : SKILLSET_NODE("skillset_manager", "turtlebot_skillset"){}
 
-Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(){
+Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),  node_handle_(std::shared_ptr<Tb3SkillsetManager>(this, [](auto *) {})){
+    RCLCPP_INFO(get_logger(), "Tb3SkillsetManager is created");
+    // Skill GetHome
+    this->GetHome_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+            "/initialpose",
+            10
+    );
     // Move to 
     this->go_to_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(
       this,
@@ -86,17 +92,14 @@ void Tb3SkillsetManager::go_to_cancel_(){
 // ======================================== Skill GetHome ============================================ 
 
 void Tb3SkillsetManager::skill_get_home_on_start(){
-  this->GetHome_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "/initialpose",
-            10
-  );
-
+  RCLCPP_INFO(this->get_logger(), "Retrieving initial pose");
   geometry_msgs::msg::PoseWithCovarianceStamped initial_pose; 
   auto input = this->skill_get_home_input();
   initial_pose = input->initialpose;
-  RCLCPP_INFO(this->get_logger(), "Sending initial pose");
+ 
   try
   {
+    RCLCPP_INFO(this->get_logger(), "Publishing initial pose");
     this->GetHome_publisher_->publish(initial_pose);
   }
   catch(const std::exception& e)
@@ -107,14 +110,4 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
   }
   RCLCPP_INFO(this->get_logger(), "Initial pose sent.");
   this->skill_get_home_success_ok();
-}
-
-void Tb3SkillsetManager::skill_get_home_invariant_not_moving_hook(){
-  RCLCPP_ERROR(this->get_logger(), "Robot moved during init. Returning failure.");
-  this->skill_get_home_failure_ko();
-}
-
-void Tb3SkillsetManager::skill_get_home_on_interrupting(){ //should not be possible
-    this->skill_get_home_interrupted();
-    RCLCPP_INFO(this->get_logger(), "GetHome interrupted. Cancelling initial pose.");
 }

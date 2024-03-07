@@ -27,6 +27,10 @@ namespace turtlebot_skillset
             message.response = event_low_battery_();
         }
         
+        else if (msg->name == "reinitialize_home") {
+            message.response = event_reinitialize_home_();
+        }
+        
         event_pub_->publish(message);
         // status
         auto status_message = status_();
@@ -214,6 +218,49 @@ namespace turtlebot_skillset
         auto message = turtlebot_skillset_interfaces::msg::EventResponse();
         message.id = info_;
         message.response = event_low_battery_();
+        event_pub_->publish(message);
+        // status
+        auto status_message = status_();
+        status_pub_->publish(status_message);
+        mutex_.unlock();
+    }
+
+    
+    //-------------------------------------------------- reinitialize_home --------------------------------------------------
+
+    int TurtlebotNode::event_reinitialize_home_()
+    {
+        // guard
+        
+        
+        // check effects
+        if (!(
+             resource_home_->check_next(HomeState::Lost)
+        ))
+        {
+            return turtlebot_skillset_interfaces::msg::EventResponse::EFFECT_FAILURE;
+        }
+        
+        // hook
+        event_reinitialize_home_hook();
+        // set effects
+        resource_home_->set_next(HomeState::Lost);
+        
+        skills_invariants_();
+        return turtlebot_skillset_interfaces::msg::EventResponse::SUCCESS;
+    }
+
+    void TurtlebotNode::event_reinitialize_home_hook()
+    {
+    }
+
+    void TurtlebotNode::event_reinitialize_home()
+    {
+        mutex_.lock();
+        RCLCPP_DEBUG(this->get_logger(), "skillset 'Anafi' event 'reinitialize_home'");
+        auto message = turtlebot_skillset_interfaces::msg::EventResponse();
+        message.id = info_;
+        message.response = event_reinitialize_home_();
         event_pub_->publish(message);
         // status
         auto status_message = status_();

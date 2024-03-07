@@ -92,6 +92,8 @@ namespace turtlebot_skillset
         void event_charge_battery();
         virtual void event_low_battery_hook();
         void event_low_battery();
+        virtual void event_reinitialize_home_hook();
+        void event_reinitialize_home();
         
         //-------------------- Skill GoTo --------------------
         const turtlebot_skillset_interfaces::msg::SkillGoToInput::SharedPtr skill_go_to_input() const; 
@@ -115,10 +117,7 @@ namespace turtlebot_skillset
         virtual bool skill_get_home_validate_hook();
         virtual void skill_get_home_start_hook();
         virtual void skill_get_home_on_start();
-        virtual void skill_get_home_invariant_not_moving_hook();
         virtual void skill_get_home_interrupt_hook();
-        virtual void skill_get_home_on_interrupting();
-        bool skill_get_home_interrupted();
         bool skill_get_home_success_ok();
         bool skill_get_home_failure_ko();
         
@@ -130,6 +129,7 @@ namespace turtlebot_skillset
         int event_authority_to_teleop_();
         int event_charge_battery_();
         int event_low_battery_();
+        int event_reinitialize_home_();
         void skills_invariants_();
         //-------------------- Skill --------------------
         turtlebot_skillset_interfaces::msg::SkillGoToResponse skill_go_to_response_initialize_() const;

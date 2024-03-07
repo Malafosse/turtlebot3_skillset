@@ -31,12 +31,11 @@ public:
     // bool skill_get_home_validate_hook();
     // void skill_get_home_start_hook();
     void skill_get_home_on_start();
-    void skill_get_home_invariant_not_moving_hook();
-    // void skill_get_home_interrupt_hook();
-    void skill_get_home_on_interrupting();
+
     
 private:
-
+    rclcpp::Node::SharedPtr node_handle_;
+    
     // Skill GetHome
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr GetHome_publisher_;
 

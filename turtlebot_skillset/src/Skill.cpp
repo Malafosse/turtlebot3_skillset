@@ -417,7 +417,6 @@ namespace turtlebot_skillset
     void TurtlebotNode::skill_get_home_start_hook() {}
     void TurtlebotNode::skill_get_home_on_start() {}
     //---------- Invariant ----------
-    void TurtlebotNode::skill_get_home_invariant_not_moving_hook() {}
     //---------- Interrupt ----------
     void TurtlebotNode::skill_get_home_interrupted_() {
         RCLCPP_DEBUG(this->get_logger(), "skillset 'turtlebot' skill 'getHome' interrupt");
@@ -426,17 +425,8 @@ namespace turtlebot_skillset
         // Stop Skill
         skill_get_home_state_ = SkillState::Ready;
         // Check effects
-        if ((
-             resource_home_->check_next(HomeState::Lost)
-            )) {
-            // hook
-            skill_get_home_interrupt_hook();
-            // Set effects
-            resource_home_->set_next(HomeState::Lost);
-            message.effect = true;
-            // Invariants
-            skills_invariants_();
-        }
+        // hook
+        skill_get_home_interrupt_hook();
         // Post
         // Response
         skill_get_home_response_pub_->publish(message);
@@ -445,18 +435,6 @@ namespace turtlebot_skillset
         status_pub_->publish(status_message);
     }
     void TurtlebotNode::skill_get_home_interrupt_hook() {}
-    void TurtlebotNode::skill_get_home_on_interrupting() {}
-    bool TurtlebotNode::skill_get_home_interrupted() {
-        mutex_.lock();
-        // Not Interrupting -> finish
-        if (skill_get_home_state_ != SkillState::Interrupting) {            
-            mutex_.unlock();
-            return false;    
-        }
-        skill_get_home_interrupted_();
-        mutex_.unlock();
-        return true;
-    }
     //---------- Success ----------
     bool TurtlebotNode::skill_get_home_success_ok() {
         mutex_.lock();
@@ -574,21 +552,6 @@ namespace turtlebot_skillset
 
     turtlebot_skillset_interfaces::msg::SkillGetHomeResponse TurtlebotNode::skill_get_home_invariants_() {
         auto message = skill_get_home_response_initialize_();
-        // ----- invariant not_moving -----
-        // guard
-        if (!((resource_move_->current() == MoveState::Idle))) {
-            message.name = "not_moving";
-            message.result = turtlebot_skillset_interfaces::msg::SkillGetHomeResponse::INVARIANT_FAILURE;
-            // check effects
-            if ((
-                 resource_home_->check_next(HomeState::Lost)
-                )) {
-                skill_get_home_invariant_not_moving_hook();
-                resource_home_->set_next(HomeState::Lost);
-                message.effect = true;
-            }
-        }
-        
         return message;
     }
 
@@ -726,10 +689,8 @@ namespace turtlebot_skillset
             return;    
         }
         // if Interrupting
-        skill_get_home_state_ = SkillState::Interrupting;
+        skill_get_home_interrupted_();
         mutex_.unlock();
-        skill_get_home_on_interrupting();
-        return;
-        // if Interrupted
+        
     }
 }

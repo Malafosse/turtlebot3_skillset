@@ -327,6 +327,41 @@ void TurtlebotSkillsetWidget::event_row_low_battery() {
         ImGui::TextColored(color, "%s", status.c_str());
 }
 
+void TurtlebotSkillsetWidget::event_button_reinitialize_home() {
+    if (ImGui::Button("reinitialize_home##turtlebot")) {
+        events_["reinitialize_home"].id = this->send_event("reinitialize_home");
+        events_["reinitialize_home"].response = turtlebot_skillset_interfaces::msg::EventResponse::UNDEFINED;
+        events_ids_[events_["reinitialize_home"].id] = "reinitialize_home";
+    }
+}
+
+void TurtlebotSkillsetWidget::event_row_reinitialize_home() {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    event_button_reinitialize_home();
+    auto evt = events_["reinitialize_home"];
+    ImGui::TableNextColumn();
+    ImVec4 color(1., 0., 0., 1.);
+    std::string status = "UNKNOWN";
+    switch (evt.response)
+    {
+    case turtlebot_skillset_interfaces::msg::EventResponse::SUCCESS:
+        status = "SUCCESS"; 
+        color.x = 0.0; color.y = 1.0;
+        break;
+    case turtlebot_skillset_interfaces::msg::EventResponse::UNDEFINED:
+        status = "UNDEFINED"; break;
+    case turtlebot_skillset_interfaces::msg::EventResponse::GUARD_FAILURE:
+        status = "GUARD_FAILURE"; break;
+    case turtlebot_skillset_interfaces::msg::EventResponse::EFFECT_FAILURE:
+        status = "EFFECT_FAILURE"; break;
+    }
+    if (this->time_since_event("reinitialize_home") > event_response_timeout_)
+        color.x = color.y = color.z = .6;
+    if (!evt.id.empty())
+        ImGui::TextColored(color, "%s", status.c_str());
+}
+
 
 void TurtlebotSkillsetWidget::skill_response_text(int result_code) {
     std::string result;
@@ -445,6 +480,8 @@ if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
         event_row_charge_battery();
         
         event_row_low_battery();
+        
+        event_row_reinitialize_home();
         
         ImGui::EndTable();
     }

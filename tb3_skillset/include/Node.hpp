@@ -20,6 +20,7 @@ public:
     // void event_authority_to_teleop_hook();
     // void event_charge_battery_hook();
     // void event_low_battery_hook();
+    // void event_reinitialize_home_hook();
     
     //-------------------- Skill Hook --------------------
     // bool skill_go_to_validate_hook();
@@ -36,11 +37,8 @@ public:
     // bool skill_get_home_validate_hook();
     // void skill_get_home_start_hook();
     // void skill_get_home_on_start();
-    // void skill_get_home_invariant_not_moving_hook();
     
     // void skill_get_home_interrupt_hook();
-    
-    // void skill_get_home_on_interrupting();
     
     
 };
