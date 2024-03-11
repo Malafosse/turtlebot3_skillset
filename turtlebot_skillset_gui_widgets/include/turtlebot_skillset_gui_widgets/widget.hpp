@@ -15,13 +15,17 @@ class TurtlebotSkillsetWidget: public TurtlebotSkillsetClient
     
     void display_start_go_to();
     inline void set_go_to_inputs(turtlebot_skillset_interfaces::msg::SkillGoToInput input) { go_to_input_ = input; };
-    inline void set_go_to_input_goalpose(geometry_msgs::msg::PoseStamped input) { go_to_input_.goalpose = input; };
+    inline void set_go_to_input_x(std_msgs::msg::Float64 input) { go_to_input_.x = input; };
+    inline void set_go_to_input_y(std_msgs::msg::Float64 input) { go_to_input_.y = input; };
+    inline void set_go_to_input_theta(std_msgs::msg::Float64 input) { go_to_input_.theta = input; };
     
     
     
     void display_start_get_home();
     inline void set_get_home_inputs(turtlebot_skillset_interfaces::msg::SkillGetHomeInput input) { get_home_input_ = input; };
-    inline void set_get_home_input_initialpose(geometry_msgs::msg::PoseWithCovarianceStamped input) { get_home_input_.initialpose = input; };
+    inline void set_get_home_input_x(std_msgs::msg::Float64 input) { get_home_input_.x = input; };
+    inline void set_get_home_input_y(std_msgs::msg::Float64 input) { get_home_input_.y = input; };
+    inline void set_get_home_input_theta(std_msgs::msg::Float64 input) { get_home_input_.theta = input; };
     
     
     

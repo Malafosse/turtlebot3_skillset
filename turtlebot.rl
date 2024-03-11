@@ -1,7 +1,6 @@
 type{
     Float
     Pose
-    InitialPose
 }
 
 skillset turtlebot {
@@ -54,7 +53,9 @@ skillset turtlebot {
 
     skill GoTo { // Go to a goal pose
         input {
-            goalpose: Pose 
+            x: Float
+            y: Float
+            theta: Float 
         }
         precondition {
             has_authority: authority == Skill
@@ -91,7 +92,9 @@ skillset turtlebot {
 
     skill getHome { // Initialize the robot's position on the map
         input {
-            initialpose: InitialPose
+            x: Float
+            y: Float
+            theta: Float 
         }
         precondition{
             not_moving: move == Idle

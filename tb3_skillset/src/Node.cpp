@@ -9,12 +9,12 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),  node_handle_(std:
     // Skill GetHome
     this->GetHome_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "/initialpose",
-            10
+            10 //queue size
     );
     // Move to 
     this->go_to_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(
       this,
-      "navigate_to_pose"); //need to check the name of the action server
+      "navigate_to_pose");
 }
 
 // ======================================== Skill GoTo ============================================
@@ -22,7 +22,10 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),  node_handle_(std:
 void Tb3SkillsetManager::skill_go_to_on_start(){
   auto goal_msg = nav2_msgs::action::NavigateToPose::Goal();
   auto input = this->skill_go_to_input();
-  goal_msg.pose = input->goalpose;
+  goal_msg.pose.pose.position.x = input->x.data;
+  goal_msg.pose.pose.position.y = input->y.data;
+  goal_msg.pose.pose.orientation.w = input->theta.data; 
+  goal_msg.pose.header.frame_id = "map";
   RCLCPP_INFO_STREAM(this->get_logger(), 
         "Sending goal " << nav2_msgs::action::to_yaml(goal_msg));
 
@@ -95,8 +98,10 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
   RCLCPP_INFO(this->get_logger(), "Retrieving initial pose");
   geometry_msgs::msg::PoseWithCovarianceStamped initial_pose; 
   auto input = this->skill_get_home_input();
-  initial_pose = input->initialpose;
- 
+  initial_pose.pose.pose.position.x = input->x.data;
+  initial_pose.pose.pose.position.y = input->y.data;
+  initial_pose.pose.pose.orientation.w = input->theta.data;
+  initial_pose.header.frame_id = "map";
   try
   {
     RCLCPP_INFO(this->get_logger(), "Publishing initial pose");

@@ -1,3 +1,5 @@
-# Generated from turtlebot.rl:55:10
-geometry_msgs/PoseStamped goalpose
+# Generated from turtlebot.rl:54:10
+std_msgs/Float64 x
+std_msgs/Float64 y
+std_msgs/Float64 theta
 

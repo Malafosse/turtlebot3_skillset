@@ -1,4 +1,4 @@
-# Generated from turtlebot.rl:9:9
+# Generated from turtlebot.rl:8:9
 string id
 builtin_interfaces/Time stamp
 bool has_data
