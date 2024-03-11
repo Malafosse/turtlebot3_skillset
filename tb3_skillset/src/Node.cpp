@@ -1,6 +1,7 @@
 #include "TurtlebotSkillsetNode.hpp"
 
 using namespace std::placeholders;
+using std::placeholders::_1;
 
 Tb3SkillsetNode::Tb3SkillsetNode() : SKILLSET_NODE("skillset_manager", "turtlebot_skillset"){}
 
@@ -15,9 +16,25 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),  node_handle_(std:
     this->go_to_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(
       this,
       "navigate_to_pose");
+    // Subscriber to the /diagnostic topic form nav2 
+    this->diagnostic_subscriber_ = this->create_subscription<diagnostic_msgs::msg::DiagnosticArray>(
+      "/diagnostics",
+      10,
+      std::bind(&Tb3SkillsetManager::nav2_diagnostic_callback_, this, _1)
+    );
+
+    nav2_active_ = false;
 }
 
 // ======================================== Skill GoTo ============================================
+
+bool Tb3SkillsetManager::skill_go_to_validate_hook(){
+  if (!nav2_active_) {
+    RCLCPP_ERROR(this->get_logger(), "Nav2 is not active. Returning failure.");
+    return false;
+  }
+  return true;
+}
 
 void Tb3SkillsetManager::skill_go_to_on_start(){
   auto goal_msg = nav2_msgs::action::NavigateToPose::Goal();
@@ -106,6 +123,15 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
   {
     RCLCPP_INFO(this->get_logger(), "Publishing initial pose");
     this->GetHome_publisher_->publish(initial_pose);
+    if (nav2_active_){
+      RCLCPP_INFO(this->get_logger(), "Initial pose sent. Nav2 initialized. Returning success.");
+      this->skill_get_home_success_ok();
+    }
+    else{
+      RCLCPP_ERROR(this->get_logger(), "Nav2 was not able to initialize. Returning failure.");
+      this->skill_get_home_failure_ko();
+      return;
+    }
   }
   catch(const std::exception& e)
   {
@@ -113,6 +139,21 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
     this->skill_get_home_failure_ko();
     return;
   }
-  RCLCPP_INFO(this->get_logger(), "Initial pose sent.");
-  this->skill_get_home_success_ok();
+ 
+}
+
+// ======================================== Misc ============================================
+
+void Tb3SkillsetManager::nav2_diagnostic_callback_(const diagnostic_msgs::msg::DiagnosticArray& diagnostic) {
+    // Iterate through each DiagnosticStatus in the array
+    for (const auto& status : diagnostic.status) {
+        // Accessing name and level members
+        if (status.name == "lifecycle_manager_navigation: Nav2 Health") {
+            if (status.level == diagnostic_msgs::msg::DiagnosticStatus::OK) {
+                nav2_active_ = true;
+            } else {
+                nav2_active_ = false;
+            }
+        }
+    }
 }

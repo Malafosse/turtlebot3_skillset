@@ -29,6 +29,7 @@ find_package(turtlebot_skillset_interfaces REQUIRED)
 find_package(turtlebot_skillset REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 
 #find_package(unique_identifier_msgs REQUIRED)
 #--------------------------------------------------
@@ -59,6 +60,7 @@ target_link_libraries(tb3_skillset
   ${nav2_msgs_LIBRARIES}
   ${geometry_msgs_LIBRARIES}
   #${unique_identifier_msgs_LIBRARIES}
+  ${diagnostic_msgs_LIBRARIES}
   ${turtlebot_skillset_interfaces_LIBRARIES}
   ${turtlebot_skillset_LIBRARIES}
 )
@@ -71,6 +73,7 @@ ament_target_dependencies(tb3_skillset
   turtlebot_skillset
   nav2_msgs
   geometry_msgs
+  diagnostic_msgs
 )
 
 install(DIRECTORY include/
@@ -103,6 +106,7 @@ ament_target_dependencies(tb3_skillset_debug
   turtlebot_skillset
   nav2_msgs
   geometry_msgs
+  diagnostic_msgs
 )
 
 install(

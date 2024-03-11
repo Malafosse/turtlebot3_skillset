@@ -4,6 +4,9 @@
 #include <nav2_msgs/action/navigate_to_pose.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include "std_msgs/msg/string.hpp"
+
 
 using namespace std::chrono_literals;
 
@@ -18,7 +21,7 @@ public:
     // void event_low_battery_hook();
     
     //-------------------- Skill GoTo --------------------
-    // bool skill_go_to_validate_hook();
+    bool skill_go_to_validate_hook();
     // void skill_go_to_start_hook();
     void skill_go_to_on_start();
     void skill_go_to_invariant_authority_to_skill_hook();
@@ -45,7 +48,14 @@ private:
     void go_to_response_callback_(const GotoGoalHandle::SharedPtr & goal_handle);
     void go_to_feedback_callback_(GotoGoalHandle::SharedPtr, const nav2_msgs::action::NavigateToPose::Feedback::ConstSharedPtr feedback);
     void go_to_result_callback_(const GotoGoalHandle::WrappedResult & result);
+    void diagnostic_callback_();
     void go_to_cancel_();
     double go_to_distance_remaining_;
     GotoGoalHandle::SharedPtr go_to_goal_handle_;
+
+    // Diagnostic
+    rclcpp::Subscription<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostic_subscriber_;
+    void nav2_diagnostic_callback_(const diagnostic_msgs::msg::DiagnosticArray& diagnostic);
+    bool nav2_active_;
+
 };
