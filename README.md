@@ -12,9 +12,17 @@
 
 ## Description
 
-`Tb3SkillsetManager` is a ROS2 node written in C++ that manages the skills of a TurtleBot3 robot. It provides functionalities such as navigating to a specific pose and retrieving the initial pose of the robot.
+`tb3_skillset` is a ROS2 node written in C++ that manages the *skills* of a TurtleBot3 robot. The architetcure provides functionalities such as navigating to a specific pose and retrieving the initial pose of the robot. In a 3-layer architecture, the skillset model stands as the executive layer, as an intermediary between a decisional layer and the functionnal layer of the robot. 
 
-## Features
+The skillset model is expressed in Robot Language (RL), a Domain Specific Language (DSL). You can find its definition in `turtlebot.rl` and the declaration of some message types it uses in `turtlebot.json`. From these two files, the skill-based architecture can be generated using the `robot_language` package. Formal verification can also be performed on the model using `SkiNet`. Finally, the `Skillset GUI Generator` allows the user to trigger events and *skills* at run time from a dedicated interface. 
+
+The `robot_language` package generates an abstract manager class that implements the rules specified in RL and the necessary ROS2 message interfaces. 
+It is also possible to generate a python client library that can be used as a high level pilot for the skillset implementation. 
+Alternatively, the user can use the GUI prvided by the `Skillset GUI Generator` library.
+
+In addition to the generated code, "hooks" have been implemented in the `tb3_skillset` node. These hooks are responsible for establishing the platform-specific communication with the functionnal layer of the robot composed of the [Nav2 Stack](https://navigation.ros.org/index.html) and the turtlebot's interface nodes. As the different elements of the architecture communicate through ROS2, the hooks have the role of creating the adequate ROS2 publishers, subscribers and clients and handling any event or fault state.   
+
+## Features / *skills*
 
 - **Go To Pose**: The robot can navigate to a specific pose. The remaining distance to the goal is continuously updated during the navigation process. If the goal is reached successfully, a success message is logged. If an error occurs, a failure message is logged.
 
@@ -70,11 +78,11 @@ Please ensure that you have ROS2 installed on your system.
 
 ## Usage
 >[!note] 
->Run the `Tb3SkillsetManager` node:
+>Run the `tb3 skillset node`:
 >```
 >ros2 run tb3_skillset tb3_skillset_node
 >```
->*[Recommended]* Run the Skillset Manager
+>*[Recommended]* Run the `Skillset Manager GUI`
 >```
 >ros2 run turtlebot_skillset_gui_widgets turtlebot_skillset_gui_widgets_node -m /skillset_manager
 >```
@@ -85,7 +93,7 @@ Please ensure that you have ROS2 installed on your system.
 
 [TurtleBot3 Website](https://emanual.robotis.com/docs/en/platform/turtlebot3/learn/#learn)
 
-[Nav2 Website](https://navigation.ros.org/index.html) see also [[Navigation2 STack.md]]
+[Nav2 Website](https://navigation.ros.org/index.html) see also [[file://Navigation2 STack.md]]
 
 ```
 export TURTLEBOT3_MODEL=burger
