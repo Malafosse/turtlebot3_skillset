@@ -41,6 +41,7 @@ include_directories(
   ${rclcpp_action_INCLUDE_DIRS}
   ${nav2_msgs_INCLUDE_DIRS}
   ${geometry_msgs_INCLUDE_DIRS}
+  ${diagnostic_msgs_INCLUDE_DIRS}
  # ${unique_identifier_msgs_INCLUDE_DIRS}
   ${turtlebot_skillset_interfaces_INCLUDE_DIRS}
   ${turtlebot_skillset_INCLUDE_DIRS}

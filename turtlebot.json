@@ -6,6 +6,11 @@
             "message": "PoseStamped"
         },
         {
+            "name": "Name",
+            "package": "std_msgs",
+            "message": "String"
+        },
+        {
             "name": "Float",
             "package": "std_msgs",
             "message": "Float64"
