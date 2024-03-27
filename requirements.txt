@@ -1,0 +1,5 @@
+builtin_interfaces==1.2.1
+inflection==0.5.1
+launch_ros==0.19.7
+rclpy==3.3.12
+std_msgs==4.2.3
