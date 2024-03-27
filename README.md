@@ -26,21 +26,15 @@ Please ensure that you have ROS2 installed on your system.
 
 1. Clone this repository into your ROS2 workspace's `src` directory.
 2. Navigate back to your ROS2 workspace root, then build the workspace with `colcon build`.
-3. Source the workspace's setup script with `source install/setup.bash`.
+3. Don't forget to source the workspace's setup script with `source install/setup.bash`.
 
-## Usage
-
-To run the `Tb3SkillsetManager` node, use the following command:
-
-```bash
-ros2 run your_package tb3_skillset_manager
-```
 
 ## Model checking
 > [!note] 
-> Local Verification
+> Local Verification of the model
+>
 > Using the SMT solver z3.
-> ```bash
+> ```
 > python3 -m robot_language ~/path-to/turtlebot.rl -v 2
 > ```
 > Visualize the Petri net 
@@ -55,7 +49,7 @@ ros2 run your_package tb3_skillset_manager
 ## Code generation
 
 >[!note] 
->**In the /src directory:**
+>**In the  `/src` directory:**
 >Abstract manager class and the ROS messages
 >```
 >python3 -m robot_language turtlebot.rl -d . -g turtlebot.json
@@ -73,12 +67,20 @@ ros2 run your_package tb3_skillset_manager
 > python3 -m robot_language turtlebot.rl -d . -g turtlebot.json -p tb3_skillset
 > ```
 
+## Usage
+
+To run the `Tb3SkillsetManager` node, use the following command:
+
+```
+ros2 run tb3_skillset tb3_skillset_node
+```
+
 ## Launching the Skillset GUI
 >[!note] 
->```bash
+>```
 >ros2 run turtlebot_skillset_gui_widgets turtlebot_skillset_gui_widgets_node -m /skillset_manager
 >```
->Where `/skillset_manager` is the name of the skillset node 
+>You may need to adjust `/skillset_manager` depending on the name of the skillset node 
 
 ## Simulate a Turtlebot in Gazebo: 
 [Crash course video](https://www.youtube.com/watch?v=idQb2pB-h2Q) Turtlebot3 - Nav2
@@ -86,3 +88,9 @@ ros2 run your_package tb3_skillset_manager
 [TurtleBot3 Website](https://emanual.robotis.com/docs/en/platform/turtlebot3/learn/#learn)
 
 [Nav2 Website](https://navigation.ros.org/index.html) see also [[Navigation2 STack.md]]
+
+```
+export TURTLEBOT3_MODEL=burger
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=maps/my_map.yaml
+```
