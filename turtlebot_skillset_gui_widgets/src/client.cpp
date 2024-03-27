@@ -32,11 +32,6 @@ TurtlebotSkillsetClient::TurtlebotSkillsetClient(const std::string &name, rclcpp
     event_sub_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::EventResponse>(
         name+"/turtlebot_skillset/event_response", qos_reliable_, std::bind(&TurtlebotSkillsetClient::event_callback_, this, std::placeholders::_1));
     
-    data_currentpose_pub_ = node_->create_publisher<turtlebot_skillset_interfaces::msg::DataRequest>(
-        name+"/turtlebot_skillset/data/currentpose/request", qos_reliable_);
-    data_currentpose_response_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>(
-        name+"/turtlebot_skillset/data/currentpose/response", qos_reliable_, std::bind(&TurtlebotSkillsetClient::data_currentpose_response_callback_, this, std::placeholders::_1));
-    
     
     go_to_result_.id = "00000000";
     go_to_status_.id = "";
@@ -189,43 +184,6 @@ double TurtlebotSkillsetClient::time_since_event(std::string event) const {
     return (now - events_stamps_.at(event)).seconds();
 }
 
-
-//-----------------------------------------------------------------------------
-void TurtlebotSkillsetClient::data_currentpose_response_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentposeResponse::SharedPtr msg) {
-    RCLCPP_INFO(node_->get_logger(), "[%s] received data 'currentpose' response %s", 
-        name_.c_str(), msg->id.c_str());
-    this->data_currentpose_.has_data = msg->has_data;
-    this->data_currentpose_.value = msg->value;
-}
-
-void TurtlebotSkillsetClient::data_currentpose_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentpose::SharedPtr msg) {
-    RCLCPP_DEBUG(node_->get_logger(), "[%s] received data 'currentpose'", name_.c_str());
-    this->data_currentpose_.has_data = true;
-    this->data_currentpose_.value = msg->value;
-}
-
-std::string TurtlebotSkillsetClient::data_currentpose_request() {
-    turtlebot_skillset_interfaces::msg::DataRequest request;
-    request.id = generate_id();
-    this->data_currentpose_pub_->publish(request);
-    return request.id;
-}
-
-void TurtlebotSkillsetClient::create_data_currentpose_subscription() {
-    if (! data_currentpose_sub_) {
-        RCLCPP_INFO(node_->get_logger(), "[%s] create subsription to data 'currentpose'", name_.c_str());
-        data_currentpose_sub_ = node_->create_subscription<turtlebot_skillset_interfaces::msg::DataCurrentpose>(
-            name_+"/turtlebot_skillset/data/currentpose", qos_reliable_, 
-            std::bind(&TurtlebotSkillsetClient::data_currentpose_callback_, this, std::placeholders::_1));
-    }
-}
-
-void TurtlebotSkillsetClient::destroy_data_currentpose_subscription() {
-    if (data_currentpose_sub_) {
-        RCLCPP_INFO(node_->get_logger(), "[%s] reset subsription to data 'currentpose'", name_.c_str());
-        data_currentpose_sub_.reset();
-    }
-}
 
 
 

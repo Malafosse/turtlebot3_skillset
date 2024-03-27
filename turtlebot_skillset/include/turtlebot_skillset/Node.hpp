@@ -21,8 +21,6 @@
 #include "turtlebot_skillset_interfaces/msg/event_request.hpp"
 #include "turtlebot_skillset_interfaces/msg/event_response.hpp"
 #include "turtlebot_skillset_interfaces/msg/skill_interrupt.hpp"
-#include "turtlebot_skillset_interfaces/msg/data_currentpose.hpp"
-#include "turtlebot_skillset_interfaces/msg/data_currentpose_response.hpp"
 
 
 #include "turtlebot_skillset_interfaces/msg/skill_go_to_input.hpp"
@@ -65,11 +63,6 @@ namespace turtlebot_skillset
 
     protected:
         //-------------------- Data --------------------
-        //----- currentpose -----
-        turtlebot_skillset_interfaces::msg::DataCurrentpose get_data_currentpose();
-        void set_data_currentpose(geometry_msgs::msg::PoseStamped data);
-        turtlebot_skillset_interfaces::msg::DataCurrentpose get_data_currentpose_hook();
-        void set_data_currentpose_hook(geometry_msgs::msg::PoseStamped data);
         
         //-------------------- Resource --------------------
         std::string get_authority_state();
@@ -147,10 +140,6 @@ namespace turtlebot_skillset
         void status_callback_(const std_msgs::msg::Empty::UniquePtr msg);
         // void data_callback_(const std_msgs::msg::String::UniquePtr msg);
         void event_callback_(const turtlebot_skillset_interfaces::msg::EventRequest::UniquePtr msg);
-        //---------- currentpose ----------
-        
-        void data_currentpose_request_callback_(const turtlebot_skillset_interfaces::msg::DataRequest::UniquePtr msg);
-        
         //---------- GoTo ----------
         void skill_go_to_callback_(const turtlebot_skillset_interfaces::msg::SkillGoToRequest::UniquePtr msg);void skill_go_to_progress_callback_();
         void skill_go_to_interrupt_callback_(const turtlebot_skillset_interfaces::msg::SkillInterrupt::UniquePtr msg);
@@ -162,12 +151,6 @@ namespace turtlebot_skillset
         std::string info_;
 
         //---------- Data ----------
-        rclcpp::Time data_currentpose_stamp_;
-        geometry_msgs::msg::PoseStamped data_currentpose_;
-        rclcpp::Publisher<turtlebot_skillset_interfaces::msg::DataCurrentpose>::SharedPtr data_currentpose_pub_;
-        
-        rclcpp::Subscription<turtlebot_skillset_interfaces::msg::DataRequest>::SharedPtr data_currentpose_request_sub_;
-        rclcpp::Publisher<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>::SharedPtr data_currentpose_response_pub_;
         
         //---------- Resource ----------
         std::shared_ptr<Authority> resource_authority_;

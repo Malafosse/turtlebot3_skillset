@@ -11,7 +11,6 @@ TurtlebotSkillsetWidget::TurtlebotSkillsetWidget(const std::string &name, rclcpp
     , display_resources_(display_resources)
     , display_events_(display_events)
     , event_response_timeout_(3.0)
-    , subscribe_currentpose_(false)
     , active_go_to_(false)
     , active_get_home_(false)
 {
@@ -320,46 +319,6 @@ void TurtlebotSkillsetWidget::update()
         this->request_status();
     }
     
-	if (this->display_data_ && ImGui::CollapsingHeader("Data", ImGuiTreeNodeFlags_DefaultOpen)) {
-        
-        if (ImGui::TreeNode("currentpose")) {
-            if (ImGui::Button("request data##turtlebot")) {
-                this->data_currentpose_request();
-            }
-            ImGui::SameLine();
-            ImGui::Checkbox("subscribe##turtlebot-currentpose", &subscribe_currentpose_);
-            if (this->data_currentpose_.has_data) {
-                if (ImGui::TreeNodeEx("currentpose", ImGuiTreeNodeFlags_DefaultOpen)) {
-if (ImGui::TreeNodeEx("header", ImGuiTreeNodeFlags_DefaultOpen)) {
-if (ImGui::TreeNodeEx("stamp", ImGuiTreeNodeFlags_DefaultOpen)) {
-	ImGui::Text("%s: %d", "sec", this->data_currentpose_.value.header.stamp.sec);
-	ImGui::Text("%s: %u", "nanosec", this->data_currentpose_.value.header.stamp.nanosec);
-	ImGui::TreePop();
-}	ImGui::Text("%s: %s", "frame_id", this->data_currentpose_.value.header.frame_id.c_str());
-	ImGui::TreePop();
-}if (ImGui::TreeNodeEx("pose", ImGuiTreeNodeFlags_DefaultOpen)) {
-if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
-	ImGui::Text("%s: %.6f", "x", this->data_currentpose_.value.pose.position.x);
-	ImGui::Text("%s: %.6f", "y", this->data_currentpose_.value.pose.position.y);
-	ImGui::Text("%s: %.6f", "z", this->data_currentpose_.value.pose.position.z);
-	ImGui::TreePop();
-}if (ImGui::TreeNodeEx("orientation", ImGuiTreeNodeFlags_DefaultOpen)) {
-	ImGui::Text("%s: %.6f", "x", this->data_currentpose_.value.pose.orientation.x);
-	ImGui::Text("%s: %.6f", "y", this->data_currentpose_.value.pose.orientation.y);
-	ImGui::Text("%s: %.6f", "z", this->data_currentpose_.value.pose.orientation.z);
-	ImGui::Text("%s: %.6f", "w", this->data_currentpose_.value.pose.orientation.w);
-	ImGui::TreePop();
-}	ImGui::TreePop();
-}	ImGui::TreePop();
-}
-            }
-            else
-                ImGui::Text("%s", "no Data");
-            ImGui::TreePop();
-        }
-        
-    }
-    
     
 	if (this->display_resources_ && ImGui::CollapsingHeader("Resources", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::BeginTable("#turtlebot_resource_table", 2);
@@ -596,10 +555,5 @@ if (ImGui::TreeNodeEx("position", ImGuiTreeNodeFlags_DefaultOpen)) {
 }
 
 void TurtlebotSkillsetWidget::process() {
-    
-    if (subscribe_currentpose_)
-        this->create_data_currentpose_subscription();
-    else
-        this->destroy_data_currentpose_subscription();
     
 }

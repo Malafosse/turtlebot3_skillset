@@ -55,8 +55,6 @@ class TurtlebotSkillsetWidget: public TurtlebotSkillsetClient
     void skill_response_text(int result_code); 
     void skill_state_button(std::string skill, unsigned int state);
     
-    bool subscribe_currentpose_;
-    
     
     bool active_go_to_;
     

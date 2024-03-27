@@ -9,9 +9,6 @@
 #include <turtlebot_skillset_interfaces/msg/data_request.hpp>
 #include <turtlebot_skillset_interfaces/msg/skill_interrupt.hpp>
 
-#include <turtlebot_skillset_interfaces/msg/data_currentpose.hpp>
-#include <turtlebot_skillset_interfaces/msg/data_currentpose_response.hpp>
-
 
 #include <turtlebot_skillset_interfaces/msg/skill_go_to_status.hpp>
 #include <turtlebot_skillset_interfaces/msg/skill_go_to_input.hpp>
@@ -46,9 +43,6 @@ class TurtlebotSkillsetClient
     
     //----- data getters
     
-    inline turtlebot_skillset_interfaces::msg::DataCurrentposeResponse get_data_currentpose() const { return data_currentpose_; };
-    void create_data_currentpose_subscription();
-    
     //----- resource getters
     
     inline std::string get_resource_authority() const { return resource_state_.at("authority"); };
@@ -75,10 +69,6 @@ class TurtlebotSkillsetClient
     std::string send_event(std::string event);
     double time_since_event(std::string event) const;
     //----- data
-    
-    turtlebot_skillset_interfaces::msg::DataCurrentposeResponse data_currentpose_;
-    std::string data_currentpose_request();
-    void destroy_data_currentpose_subscription();
     
     //----- resources
     std::map<std::string, std::string> resource_state_;
@@ -112,12 +102,6 @@ class TurtlebotSkillsetClient
     rclcpp::Subscription<turtlebot_skillset_interfaces::msg::EventResponse>::SharedPtr event_sub_;
     void event_callback_(const turtlebot_skillset_interfaces::msg::EventResponse::SharedPtr msg);
     //----- data
-    
-    rclcpp::Subscription<turtlebot_skillset_interfaces::msg::DataCurrentpose>::SharedPtr data_currentpose_sub_;
-    void data_currentpose_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentpose::SharedPtr msg);
-    rclcpp::Publisher<turtlebot_skillset_interfaces::msg::DataRequest>::SharedPtr data_currentpose_pub_;
-    rclcpp::Subscription<turtlebot_skillset_interfaces::msg::DataCurrentposeResponse>::SharedPtr data_currentpose_response_;
-    void data_currentpose_response_callback_(const turtlebot_skillset_interfaces::msg::DataCurrentposeResponse::SharedPtr msg);
     
     //----- skills
     

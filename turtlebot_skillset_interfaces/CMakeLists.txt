@@ -42,9 +42,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   # "msg/SkillResult.msg"
   # "msg/SkillTransition.msg"
 #========== SPECIFIC ==========
-# ----- data currentpose -----
-  "msg/DataCurrentpose.msg"
-  "msg/DataCurrentposeResponse.msg"
 
 # ----- Skill GoTo -----
   "msg/SkillGoToInput.msg"

@@ -1,11 +1,11 @@
 type{
     Float
-    Pose
+    //Pose
 }
 
 skillset turtlebot {
 
-    data currentpose: Pose
+    //data currentpose: Pose
 
     resource {
         authority {
@@ -102,12 +102,12 @@ skillset turtlebot {
         }
         start home -> Initializing
         interrupt {
-            interrupting false  // This skill cannot be interrupted
+            interrupting false  // This skill cannot be interrupted, it is just an instant publish
         }
         success ok {
             effect home -> Initialized
         }
-        failure ko {
+        failure ko { // May fail if nav2 is not running
             effect home -> Lost
         }
     }
