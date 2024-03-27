@@ -50,39 +50,36 @@ Please ensure that you have ROS2 installed on your system.
 
 >[!note] 
 >**In the  `/src` directory:**
->Abstract manager class and the ROS messages
+>[Compulsory] Abstract manager class and the ROS messages
 >```
 >python3 -m robot_language turtlebot.rl -d . -g turtlebot.json
 >```
->Python client library
+>[Optionnal] Python client library
 >```
 >python3 -m robot_language turtlebot.rl -d . -g turtlebot.json -c
 >```
->Skillset GUI
+>[Recommended] Skillset GUI
 >```
 >python3 -m skillset_gui_generator turtlebot.rl -d . -g turtlebot.json
 >```
->Specific node for the turtlebot
+>[Optionnal] If you ever need to regenerate a clean tb3_skillset node: 
 >```
 > python3 -m robot_language turtlebot.rl -d . -g turtlebot.json -p tb3_skillset
 > ```
 
 ## Usage
-
-To run the `Tb3SkillsetManager` node, use the following command:
-
-```
-ros2 run tb3_skillset tb3_skillset_node
-```
-
-## Launching the Skillset GUI
 >[!note] 
+>Run the `Tb3SkillsetManager` node:
+>```
+>ros2 run tb3_skillset tb3_skillset_node
+>```
+>Run the Skillset Manager
 >```
 >ros2 run turtlebot_skillset_gui_widgets turtlebot_skillset_gui_widgets_node -m /skillset_manager
 >```
 >You may need to adjust `/skillset_manager` depending on the name of the skillset node 
 
-## Simulate a Turtlebot in Gazebo: 
+## Control a real TurtleBot3 or simulate one in Gazebo: 
 [Crash course video](https://www.youtube.com/watch?v=idQb2pB-h2Q) Turtlebot3 - Nav2
 
 [TurtleBot3 Website](https://emanual.robotis.com/docs/en/platform/turtlebot3/learn/#learn)
