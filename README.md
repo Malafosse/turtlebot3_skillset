@@ -89,7 +89,7 @@ Please ensure that you have ROS2 installed on your system.
 >You may need to adjust `/skillset_manager` depending on the name of the skillset node 
 
 Preview of the tb3_skillset manager and its GUI controlling a simulated TurtleBot3 in a Gazebo environment. 
-![](tb3_skillset_prev.png)
+![](imgs/tb3_skillset_prev.png)
 
 ## Control a real TurtleBot3 or simulate one in Gazebo: 
 [Crash course video](https://www.youtube.com/watch?v=idQb2pB-h2Q) Turtlebot3 - Nav2
