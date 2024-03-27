@@ -93,7 +93,7 @@ Please ensure that you have ROS2 installed on your system.
 
 [TurtleBot3 Website](https://emanual.robotis.com/docs/en/platform/turtlebot3/learn/#learn)
 
-[Nav2 Website](https://navigation.ros.org/index.html) see also [[file://Navigation2 STack.md]]
+[Nav2 Website](https://navigation.ros.org/index.html) alternatively, you can check out [my notes](Navigation2Stack.md).
 
 ```
 export TURTLEBOT3_MODEL=burger
