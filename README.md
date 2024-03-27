@@ -3,9 +3,9 @@
 ## Dependencies
 
 [GitLab ONERA Robot Skills](https://gitlab.com/groups/onera-robot-skills)
-- robot_language
-- Skillset GUI generator
-- SkiNet Release
+- *[Compulsory]* robot_language
+- *[Recommended]* Skillset GUI generator
+- *[Optional]* SkiNet Release
 
 [Tuto ONERA Robot Skills](https://onera-robot-skills.gitlab.io/introduction.html)
 ![](https://onera-robot-skills.gitlab.io/_images/intro.png)
@@ -29,7 +29,7 @@ Please ensure that you have ROS2 installed on your system.
 3. Don't forget to source the workspace's setup script with `source install/setup.bash`.
 
 
-## Model checking
+## *[Optional]* Model checking
 > [!note] 
 > Local Verification of the model
 >
@@ -50,19 +50,20 @@ Please ensure that you have ROS2 installed on your system.
 
 >[!note] 
 >**In the  `/src` directory:**
->[Compulsory] Abstract manager class and the ROS messages
+>
+>*[Compulsory]* Abstract manager class and the ROS messages
 >```
 >python3 -m robot_language turtlebot.rl -d . -g turtlebot.json
 >```
->[Optionnal] Python client library
+>*[Optional]* Python client library
 >```
 >python3 -m robot_language turtlebot.rl -d . -g turtlebot.json -c
 >```
->[Recommended] Skillset GUI
+>*[Recommended]* Skillset GUI
 >```
 >python3 -m skillset_gui_generator turtlebot.rl -d . -g turtlebot.json
 >```
->[Optionnal] If you ever need to regenerate a clean tb3_skillset node: 
+>*[Optionnal]* If you ever need to regenerate a clean tb3_skillset node: 
 >```
 > python3 -m robot_language turtlebot.rl -d . -g turtlebot.json -p tb3_skillset
 > ```
@@ -73,7 +74,7 @@ Please ensure that you have ROS2 installed on your system.
 >```
 >ros2 run tb3_skillset tb3_skillset_node
 >```
->Run the Skillset Manager
+>*[Recommended]* Run the Skillset Manager
 >```
 >ros2 run turtlebot_skillset_gui_widgets turtlebot_skillset_gui_widgets_node -m /skillset_manager
 >```
