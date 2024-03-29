@@ -1,12 +1,19 @@
 #include "TurtlebotSkillsetNode.hpp"
 
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <cv_bridge/cv_bridge.h>
+
+#include <memory>
+
 using namespace std::placeholders;
 using std::placeholders::_1;
 
 Tb3SkillsetNode::Tb3SkillsetNode() : SKILLSET_NODE("skillset_manager", "turtlebot_skillset"){}
 
 Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),  
-  node_handle_(std::shared_ptr<Tb3SkillsetManager>(this, [](auto *) {}))
+  node_handle_(std::shared_ptr<Tb3SkillsetManager>(this, [](auto *) {})),
+  image_transport_(node_handle_)
 {
     RCLCPP_INFO(get_logger(), "Tb3SkillsetManager is created");
     // Skill GetHome
@@ -25,12 +32,28 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),
       std::bind(&Tb3SkillsetManager::nav2_diagnostic_callback_, this, _1)
     );
 
-  // this->declare_parameter("image_transport", "compressed");
-  // image_sub_ = image_transport_.subscribe("image", 1, 
-  //       [=](const sensor_msgs::msg::Image::ConstSharedPtr img) {
-  //           cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
-  //           _ipl_img = cv_ptr->image;
-  //       });
+  // Skill take picture
+  this->declare_parameter("image_transport", "raw");
+  image_sub_ = image_transport_.subscribe("/camera/image_raw", 1, 
+        [=](const sensor_msgs::msg::Image::ConstSharedPtr img) {
+            cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
+            _ipl_img = cv_ptr->image;
+        });
+
+  // Skill Explore
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
+  cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", qos);
+
+  scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+    "scan", \
+    rclcpp::SensorDataQoS(), \
+    std::bind(
+      &Tb3SkillsetManager::scan_callback_, \
+      this, \
+      std::placeholders::_1));
+  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+    "odom", qos, std::bind(&Tb3SkillsetManager::odom_callback_, this, std::placeholders::_1));
+
 }
 
 // ======================================== Events ============================================
@@ -56,31 +79,36 @@ void Tb3SkillsetManager::event_enable_navigation_hook(){
 
 bool Tb3SkillsetManager::skill_go_to_validate_hook(){
   if (!nav2_active_) {
-    RCLCPP_ERROR(this->get_logger(), "Nav2 is not active. Returning failure.");
     return false;
   }
   return true;
 }
 
 void Tb3SkillsetManager::skill_go_to_on_start(){
-  auto goal_msg = nav2_msgs::action::NavigateToPose::Goal();
-  auto input = this->skill_go_to_input();
-  goal_msg.pose.pose.position.x = input->x.data;
-  goal_msg.pose.pose.position.y = input->y.data;
-  goal_msg.pose.pose.orientation.w = input->theta.data; 
-  goal_msg.pose.header.frame_id = "map";
-  RCLCPP_INFO_STREAM(this->get_logger(), 
-        "Sending goal " << nav2_msgs::action::to_yaml(goal_msg));
+  if (this->skill_go_to_validate_hook()){
+    auto goal_msg = nav2_msgs::action::NavigateToPose::Goal();
+    auto input = this->skill_go_to_input();
+    goal_msg.pose.pose.position.x = input->x.data;
+    goal_msg.pose.pose.position.y = input->y.data;
+    goal_msg.pose.pose.orientation.w = input->theta.data; 
+    goal_msg.pose.header.frame_id = "map";
+    RCLCPP_INFO_STREAM(this->get_logger(), 
+          "Sending goal " << nav2_msgs::action::to_yaml(goal_msg));
 
-  auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
-  send_goal_options.goal_response_callback =
-    std::bind(&Tb3SkillsetManager::go_to_response_callback_, this, _1);
-  send_goal_options.feedback_callback =
-    std::bind(&Tb3SkillsetManager::go_to_feedback_callback_, this, _1, _2);
-  send_goal_options.result_callback = 
-    std::bind(&Tb3SkillsetManager::go_to_result_callback_, this, _1);
+    auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
+    send_goal_options.goal_response_callback =
+      std::bind(&Tb3SkillsetManager::go_to_response_callback_, this, _1);
+    send_goal_options.feedback_callback =
+      std::bind(&Tb3SkillsetManager::go_to_feedback_callback_, this, _1, _2);
+    send_goal_options.result_callback = 
+      std::bind(&Tb3SkillsetManager::go_to_result_callback_, this, _1);
 
-  this->go_to_client_->async_send_goal(goal_msg, send_goal_options);
+    this->go_to_client_->async_send_goal(goal_msg, send_goal_options);
+  }
+  else{
+    RCLCPP_ERROR(this->get_logger(), "Nav2 is not active. Cancelling MoveTo action.");
+    this->skill_go_to_failure_ko();
+  }
 }
 
 void Tb3SkillsetManager::skill_go_to_invariant_authority_to_skill_hook(){
@@ -186,33 +214,45 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
 }
 
 // ======================================== Skill TakePicture ============================================
-// bool Tb3SkillsetManager::save_image(std::string filename) {
-//     RCLCPP_INFO_STREAM(this->get_logger(), "saving image to file " << filename);
-//     try {
-//         return cv::imwrite(filename, _ipl_img);
-//     } catch (...) {
-//         return false;
-//     }
-// }
+bool Tb3SkillsetManager::save_image_(std::string filename) {
+    try {
+        return cv::imwrite(filename, _ipl_img);
+    } catch (...) {
+        return false;
+    }
+}
 
 void Tb3SkillsetManager::skill_take_picture_on_start(){
-    RCLCPP_INFO(this->get_logger(), "Taking picture");
-    // auto input = this->skill_take_picture_input();
-    // std::string file_name = input->file_name.data;
-    // if (save_image(file_name)) {
-    //     RCLCPP_INFO(this->get_logger(), "Image saved as " << file_name);
-    //     this->skill_take_picture_success_image_saved();
-    // } else {
-    //     RCLCPP_ERROR(this->get_logger(), "Could not save " << file_name);
-    //     this->skill_take_picture_failure_image_save_fail();
-    // }
-    this->skill_take_picture_success_image_saved();
+    num_publishers_ = this->count_publishers("/camera/image_raw");
+    if (num_publishers_ == 0) {
+        RCLCPP_ERROR(this->get_logger(), "The robot does not appear to have a camera. Returning failure.");
+        this->skill_take_picture_failure_image_save_fail();
+        return;
+    }
+    auto input = this->skill_take_picture_input();
+    std::string file_name = input->file_name.data;
+    if (save_image_(file_name)) {
+        RCLCPP_INFO_STREAM(this->get_logger(), "Image saved as " + file_name);
+        this->skill_take_picture_success_image_saved();
+    } else {
+        RCLCPP_INFO_STREAM(this->get_logger(), "Could not save " + file_name);
+        this->skill_take_picture_failure_image_save_fail();
+    }
 }
 
 // ======================================== Skill Explore ============================================
 void Tb3SkillsetManager::skill_explore_on_start(){
+  scan_data_[0] = 0.0;
+  scan_data_[1] = 0.0;
+  scan_data_[2] = 0.0;
+
+  robot_pose_ = 0.0;
+  prev_robot_pose_ = 0.0;
+  elapsed_time_ = std::chrono::milliseconds(0);
+ 
   RCLCPP_INFO(this->get_logger(), "Starting Exploration.");
-  this->skill_explore_success_ok();
+  update_timer_ = this->create_wall_timer(10ms, std::bind(&Tb3SkillsetManager::update_callback_, this));
+  return;
 }
 
 void Tb3SkillsetManager::skill_explore_invariant_authority_to_skill_hook(){
@@ -232,10 +272,128 @@ void Tb3SkillsetManager::skill_explore_on_interrupting(){
   this->explore_cancel_();
 }
 
+turtlebot_skillset_interfaces::msg::SkillExploreProgress Tb3SkillsetManager::skill_explore_progress_hook(){
+  turtlebot_skillset_interfaces::msg::SkillExploreProgress progress;
+  auto input = this->skill_explore_input();
+  auto defined_timeout = input->duration.data;
+  progress.time_remaining.data = defined_timeout - elapsed_time_.count()/1000;
+  return progress;
+}
+
 void Tb3SkillsetManager::explore_cancel_(){
-  RCLCPP_INFO(this->get_logger(), "Cancelling Exploration.");
+  RCLCPP_INFO(this->get_logger(), "Cancelled Exploration.");
+  //explore_timeout_ = true;
+  update_timer_.reset();
+  update_cmd_vel_(0.0, 0.0);
   this->skill_explore_interrupted();
 }
+
+void Tb3SkillsetManager::odom_callback_(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  tf2::Quaternion q(
+    msg->pose.pose.orientation.x,
+    msg->pose.pose.orientation.y,
+    msg->pose.pose.orientation.z,
+    msg->pose.pose.orientation.w);
+  tf2::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+
+  robot_pose_ = yaw;
+}
+
+void Tb3SkillsetManager::scan_callback_(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+{
+  uint16_t scan_angle[3] = {0, 30, 330};
+
+  for (int num = 0; num < 3; num++) {
+    if (std::isinf(msg->ranges.at(scan_angle[num]))) {
+      scan_data_[num] = msg->range_max;
+    } else {
+      scan_data_[num] = msg->ranges.at(scan_angle[num]);
+    }
+  }
+}
+
+void Tb3SkillsetManager::update_cmd_vel_(double linear, double angular)
+{
+  geometry_msgs::msg::Twist cmd_vel;
+  cmd_vel.linear.x = linear;
+  cmd_vel.angular.z = angular;
+
+  cmd_vel_pub_->publish(cmd_vel);
+}
+
+void Tb3SkillsetManager::check_elapsed_time_callback_(){
+  auto input = this->skill_explore_input();
+  auto defined_timeout = input->duration.data;
+  if (elapsed_time_.count() > (defined_timeout+1)*1000) {
+    RCLCPP_INFO(this->get_logger(), "Exploration completed after %ld seconds. Returning success.", elapsed_time_.count()/1000);
+    update_timer_.reset();
+    update_cmd_vel_(0.0, 0.0);
+    this->skill_explore_success_ok();
+  }
+}
+
+void Tb3SkillsetManager::update_callback_()
+{
+  static uint8_t turtlebot3_state_num = 0;
+  double escape_range = 30.0 * DEG2RAD;
+  double check_forward_dist = 0.7;
+  double check_side_dist = 0.5;
+  elapsed_time_ += 10ms;
+
+  //RCLCPP_INFO(this->get_logger(), "Entered the update callback");
+
+  switch (turtlebot3_state_num) {
+    case GET_TB3_DIRECTION:
+      if (scan_data_[CENTER] > check_forward_dist) {
+        if (scan_data_[LEFT] < check_side_dist) {
+          prev_robot_pose_ = robot_pose_;
+          turtlebot3_state_num = TB3_RIGHT_TURN;
+        } else if (scan_data_[RIGHT] < check_side_dist) {
+          prev_robot_pose_ = robot_pose_;
+          turtlebot3_state_num = TB3_LEFT_TURN;
+        } else {
+          turtlebot3_state_num = TB3_DRIVE_FORWARD;
+        }
+      }
+
+      if (scan_data_[CENTER] < check_forward_dist) {
+        prev_robot_pose_ = robot_pose_;
+        turtlebot3_state_num = TB3_RIGHT_TURN;
+      }
+      break;
+
+    case TB3_DRIVE_FORWARD:
+      update_cmd_vel_(LINEAR_VELOCITY, 0.0);
+      turtlebot3_state_num = GET_TB3_DIRECTION;
+      break;
+
+    case TB3_RIGHT_TURN:
+      if (fabs(prev_robot_pose_ - robot_pose_) >= escape_range) {
+        turtlebot3_state_num = GET_TB3_DIRECTION;
+      } else {
+        update_cmd_vel_(0.0, -1 * ANGULAR_VELOCITY);
+      }
+      break;
+
+    case TB3_LEFT_TURN:
+      if (fabs(prev_robot_pose_ - robot_pose_) >= escape_range) {
+        turtlebot3_state_num = GET_TB3_DIRECTION;
+      } else {
+        update_cmd_vel_(0.0, ANGULAR_VELOCITY);
+      }
+      break;
+
+    default:
+      turtlebot3_state_num = GET_TB3_DIRECTION;
+      break;
+  }
+
+   this->check_elapsed_time_callback_();
+}
+
 // ======================================== Skill SaveMap ============================================
 void Tb3SkillsetManager::skill_save_map_on_start(){
   RCLCPP_INFO(this->get_logger(), "Saving map.");

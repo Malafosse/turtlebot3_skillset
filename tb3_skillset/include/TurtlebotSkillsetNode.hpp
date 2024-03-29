@@ -7,6 +7,29 @@
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include "std_msgs/msg/string.hpp"
 
+// SKill Take Picture
+#include <image_transport/image_transport.hpp>
+#include <opencv2/opencv.hpp>
+
+//Skill Explore
+#include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
+
+#define DEG2RAD (M_PI / 180.0)
+#define RAD2DEG (180.0 / M_PI)
+
+#define CENTER 0
+#define LEFT   1
+#define RIGHT  2
+
+#define LINEAR_VELOCITY  0.3
+#define ANGULAR_VELOCITY 1.5
+
+#define GET_TB3_DIRECTION 0
+#define TB3_DRIVE_FORWARD 1
+#define TB3_RIGHT_TURN    2
+#define TB3_LEFT_TURN     3
+
 
 using namespace std::chrono_literals;
 
@@ -45,12 +68,13 @@ public:
     // void skill_take_picture_interrupt_hook();
     
     //-------------------- Skill Explore --------------------
-    // bool skill_explore_validate_hook();
+    //bool skill_explore_validate_hook();
     // void skill_explore_start_hook();
     void skill_explore_on_start();
     void skill_explore_invariant_authority_to_skill_hook();
     void skill_explore_invariant_battery_ok_hook();
     void skill_explore_invariant_exploration_enabled_hook();
+    turtlebot_skillset_interfaces::msg::SkillExploreProgress skill_explore_progress_hook();
     // void skill_explore_interrupt_hook();
     void skill_explore_on_interrupting();
     
@@ -64,10 +88,10 @@ public:
 private:
     rclcpp::Node::SharedPtr node_handle_;
 
-    // Skill GetHome
+    // ====================================Skill GetHome====================================
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr GetHome_publisher_;
 
-    // Skill GoTo
+    // ====================================Skill GoTo====================================
     rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SharedPtr go_to_client_;
     using GotoGoalHandle = rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>;
     void go_to_response_callback_(const GotoGoalHandle::SharedPtr & goal_handle);
@@ -78,16 +102,38 @@ private:
     double go_to_distance_remaining_;
     GotoGoalHandle::SharedPtr go_to_goal_handle_;
 
-    // skill take picture
-    // image_transport::ImageTransport image_transport_;
-    // image_transport::Subscriber image_sub_;
-    // cv::Mat _ipl_img;
-    // bool save_image(std::string filename);
+    // ====================================skill take picture====================================
+    image_transport::ImageTransport image_transport_;
+    image_transport::Subscriber image_sub_;
+    int num_publishers_;
+    cv::Mat _ipl_img;
+    bool save_image_(std::string filename);
 
-    // Skill Explore
+    // ====================================Skill Explore===================================
     void explore_cancel_();
+    // ROS topic publishers
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
 
-    // Diagnostic
+    // ROS topic subscribers
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+
+    // Variables
+    double robot_pose_;
+    double prev_robot_pose_;
+    double scan_data_[3];
+
+    // ROS timer
+    rclcpp::TimerBase::SharedPtr update_timer_;
+    std::chrono::milliseconds elapsed_time_;
+
+    void update_callback_();
+    void update_cmd_vel_(double linear, double angular);
+    void scan_callback_(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+    void odom_callback_(const nav_msgs::msg::Odometry::SharedPtr msg);
+    void check_elapsed_time_callback_();
+
+    // ====================================Diagnostic====================================
     rclcpp::Subscription<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostic_subscriber_;
     void nav2_diagnostic_callback_(const diagnostic_msgs::msg::DiagnosticArray& diagnostic);
     bool nav2_active_;

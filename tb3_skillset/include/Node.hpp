@@ -57,7 +57,7 @@ public:
     // void skill_explore_invariant_authority_to_skill_hook();
     // void skill_explore_invariant_battery_ok_hook();
     // void skill_explore_invariant_exploration_enabled_hook();
-    
+    // turtlebot_skillset_interfaces::msg::SkillExploreProgress skill_explore_progress_hook();
     // void skill_explore_interrupt_hook();
     
     // void skill_explore_on_interrupting();

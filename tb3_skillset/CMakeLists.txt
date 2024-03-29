@@ -29,7 +29,11 @@ find_package(turtlebot_skillset_interfaces REQUIRED)
 find_package(turtlebot_skillset REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(image_transport REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
 
 #find_package(unique_identifier_msgs REQUIRED)
 #--------------------------------------------------
@@ -42,6 +46,11 @@ include_directories(
   ${nav2_msgs_INCLUDE_DIRS}
   ${geometry_msgs_INCLUDE_DIRS}
   ${diagnostic_msgs_INCLUDE_DIRS}
+  ${nav_msgs_INCLUDE_DIRS}
+  ${sensor_msgs_INCLUDE_DIRS}
+  ${tf2_INCLUDE_DIRS}
+  ${image_transport_INCLUDE_DIRS}
+  ${cv_bridge_INCLUDE_DIRS}
  # ${unique_identifier_msgs_INCLUDE_DIRS}
   ${turtlebot_skillset_interfaces_INCLUDE_DIRS}
   ${turtlebot_skillset_INCLUDE_DIRS}
@@ -60,6 +69,11 @@ target_link_libraries(tb3_skillset
   ${rclcpp_action_LIBRARIES}
   ${nav2_msgs_LIBRARIES}
   ${geometry_msgs_LIBRARIES}
+  ${nav_msgs_LIBRARIES}
+  ${sensor_msgs_LIBRARIES}
+  ${tf2_LIBRARIES}
+  ${image_transport_LIBRARIES}
+  ${cv_bridge_LIBRARIES}
   #${unique_identifier_msgs_LIBRARIES}
   ${diagnostic_msgs_LIBRARIES}
   ${turtlebot_skillset_interfaces_LIBRARIES}
@@ -74,6 +88,11 @@ ament_target_dependencies(tb3_skillset
   turtlebot_skillset
   nav2_msgs
   geometry_msgs
+  nav_msgs
+  sensor_msgs
+  tf2
+  image_transport
+  cv_bridge
   diagnostic_msgs
 )
 
@@ -98,7 +117,22 @@ add_library(tb3_skillset_debug
 
 
 target_compile_definitions(tb3_skillset_debug PUBLIC SKILLSET_DEBUG_MODE)
-target_link_libraries(tb3_skillset_debug)
+target_link_libraries(tb3_skillset_debug
+  ${rclcpp_LIBRARIES}
+  ${std_msgs_LIBRARIES}
+  ${rclcpp_action_LIBRARIES}
+  ${nav2_msgs_LIBRARIES}
+  ${geometry_msgs_LIBRARIES}
+  ${nav_msgs_LIBRARIES}
+  ${sensor_msgs_LIBRARIES}
+  ${tf2_LIBRARIES}
+  ${image_transport_LIBRARIES}
+  ${cv_bridge_LIBRARIES}
+  #${unique_identifier_msgs_LIBRARIES}
+  ${diagnostic_msgs_LIBRARIES}
+  ${turtlebot_skillset_interfaces_LIBRARIES}
+  ${turtlebot_skillset_LIBRARIES}
+)
 ament_target_dependencies(tb3_skillset_debug 
   rclcpp 
   std_msgs 
@@ -107,6 +141,11 @@ ament_target_dependencies(tb3_skillset_debug
   turtlebot_skillset
   nav2_msgs
   geometry_msgs
+  nav_msgs
+  sensor_msgs
+  tf2
+  image_transport
+  cv_bridge
   diagnostic_msgs
 )
 

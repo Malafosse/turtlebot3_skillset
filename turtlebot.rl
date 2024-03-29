@@ -143,7 +143,6 @@ skillset turtlebot {
             duration: Float
         }
         precondition {
-            exploration_enabled: context == SLAM
             has_authority: authority == Skill
             not_moving: move == Idle
             battery_ok: battery_status == Normal
@@ -158,11 +157,11 @@ skillset turtlebot {
                 guard battery_status == Normal
                 effect move -> Idle
             }
-            exploration_enabled {
-                guard context == SLAM
-                effect move -> Idle
-            }
         }
+        progress {
+            period 1.0
+            output time_remaining: Float
+            }
         interrupt {
             interrupting true
             effect move -> Idle
