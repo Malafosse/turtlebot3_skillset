@@ -21,7 +21,7 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),
             "/initialpose",
             10 //queue size
     );
-    // Move to 
+    // SKill Move to 
     this->go_to_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(
       this,
       "navigate_to_pose");
@@ -53,6 +53,10 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),
       std::placeholders::_1));
   odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
     "odom", qos, std::bind(&Tb3SkillsetManager::odom_callback_, this, std::placeholders::_1));
+  
+  // Skill SaveMap
+  this->save_map_client_ = this->create_client<nav2_msgs::srv::SaveMap>("/map_saver/save_map");
+
 
 }
 
@@ -395,9 +399,44 @@ void Tb3SkillsetManager::update_callback_()
 }
 
 // ======================================== Skill SaveMap ============================================
-void Tb3SkillsetManager::skill_save_map_on_start(){
-  RCLCPP_INFO(this->get_logger(), "Saving map.");
-  this->skill_save_map_success_map_saved();
+void Tb3SkillsetManager::skill_save_map_on_start() {
+    RCLCPP_INFO(this->get_logger(), "Saving map.");
+    auto input = this->skill_save_map_input();
+    auto request = std::make_shared<nav2_msgs::srv::SaveMap::Request>();
+    request->map_url = std::string(getenv("HOME")) + "/maps/" + input->file_name.data;
+    RCLCPP_INFO_STREAM(this->get_logger(), "saving " + input->file_name.data);
+    request->image_format = "pgm";
+    request->map_mode = "trinary";
+    request->map_topic = "map";
+    request->free_thresh = 0.25;
+    request->occupied_thresh = 0.65;
+
+    // Send the request asynchronously
+    auto future = this->save_map_client_->async_send_request(request,
+        [this](rclcpp::Client<nav2_msgs::srv::SaveMap>::SharedFuture future) {
+            if (future.valid()) {
+                auto result = future.get();
+                if (result->result) {
+                    RCLCPP_INFO(this->get_logger(), "Map saved.");
+                    this->skill_save_map_success_map_saved();
+                } else {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to save map.");
+                    this->skill_save_map_failure_map_not_saved();
+                }
+            } else {
+                RCLCPP_ERROR(this->get_logger(), "Failed to get future for save map request.");
+                this->skill_save_map_failure_map_not_saved();
+            }
+        });
+
+    // Check if the future is valid
+    if (!future.valid()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send save map request.");
+        this->skill_save_map_failure_map_not_saved();
+        return;
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Sent save map request.");
 }
 
 // ======================================== Misc ============================================

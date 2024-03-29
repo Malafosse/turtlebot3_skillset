@@ -2,6 +2,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include <nav2_msgs/action/navigate_to_pose.hpp>
+#include <nav2_msgs/srv/save_map.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
@@ -132,6 +133,11 @@ private:
     void scan_callback_(const sensor_msgs::msg::LaserScan::SharedPtr msg);
     void odom_callback_(const nav_msgs::msg::Odometry::SharedPtr msg);
     void check_elapsed_time_callback_();
+
+    // ====================================Skill SaveMap====================================
+    rclcpp::Client<nav2_msgs::srv::SaveMap>::SharedPtr save_map_client_;
+
+
 
     // ====================================Diagnostic====================================
     rclcpp::Subscription<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostic_subscriber_;
