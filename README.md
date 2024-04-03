@@ -30,7 +30,7 @@ In addition to the generated code, "hooks" have been implemented in the `tb3_ski
 
 - **Get Home**: The robot can compute its current pose. This initial pose is published to a ROS2 topic to locate the robot within the loaded map. If the Nav2 stack is initialized successfully, a success message is logged.
 
-- **Go To Pose**: The robot can navigate to a specific location given on a pre-existing map of its environment. The remaining distance to the goal is continuously updated during the navigation process. If the goal is reached successfully, a success message is logged.
+- **Go To Pose**: By acting as a client for the Nav2 `NavigateToPose` action, the robot can navigate to a specific location given on a pre-existing map of its environment. The remaining distance to the goal is continuously updated during the navigation process. If the goal is reached successfully, a success message is logged.
 
 - **Take Picture**: If equiped with a camera, -- TurtleBot3 Waffle comes with a camera, Burger does not -- the robot is able to save te current image from the camera feed. 
 
