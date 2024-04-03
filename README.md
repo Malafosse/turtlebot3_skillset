@@ -24,9 +24,16 @@ In addition to the generated code, "hooks" have been implemented in the `tb3_ski
 
 ## Features / *skills*
 
-- **Go To Pose**: The robot can navigate to a specific pose. The remaining distance to the goal is continuously updated during the navigation process. If the goal is reached successfully, a success message is logged. If an error occurs, a failure message is logged.
+- **Explore**: The robot navigates for a set duration while avoiding obstacles. It can be used for exploring an unknown environment for SLAM purposes.
 
-- **Get Home**: The robot can retrieve its initial pose. The initial pose is published to a ROS2 topic. If the pose is published successfully, a success message is logged. If an error occurs, a failure message is logged.
+- **Save Map**: While in a SLAM configuration, the Save Map Skill acts as a client for the `Map_Saver` service provided by Nav2.
+
+- **Get Home**: The robot can compute its current pose. This initial pose is published to a ROS2 topic to locate the robot within the loaded map. If the Nav2 stack is initialized successfully, a success message is logged.
+
+- **Go To Pose**: The robot can navigate to a specific location given on a pre-existing map of its environment. The remaining distance to the goal is continuously updated during the navigation process. If the goal is reached successfully, a success message is logged.
+
+- **Take Picture**: If equiped with a camera, -- TurtleBot3 Waffle comes with a camera, Burger does not -- the robot is able to save te current image from the camera feed. 
+
 
 ## Installation
 
