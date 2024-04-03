@@ -31,6 +31,7 @@ find_package(nav2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(tf2_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
@@ -49,6 +50,7 @@ include_directories(
   ${nav_msgs_INCLUDE_DIRS}
   ${sensor_msgs_INCLUDE_DIRS}
   ${tf2_INCLUDE_DIRS}
+  ${tf2_msgs_INCLUDE_DIRS}
   ${image_transport_INCLUDE_DIRS}
   ${cv_bridge_INCLUDE_DIRS}
  # ${unique_identifier_msgs_INCLUDE_DIRS}
@@ -72,6 +74,7 @@ target_link_libraries(tb3_skillset
   ${nav_msgs_LIBRARIES}
   ${sensor_msgs_LIBRARIES}
   ${tf2_LIBRARIES}
+  ${tf2_msgs_LIBRARIES}
   ${image_transport_LIBRARIES}
   ${cv_bridge_LIBRARIES}
   #${unique_identifier_msgs_LIBRARIES}
@@ -91,6 +94,7 @@ ament_target_dependencies(tb3_skillset
   nav_msgs
   sensor_msgs
   tf2
+  tf2_msgs
   image_transport
   cv_bridge
   diagnostic_msgs
@@ -126,6 +130,7 @@ target_link_libraries(tb3_skillset_debug
   ${nav_msgs_LIBRARIES}
   ${sensor_msgs_LIBRARIES}
   ${tf2_LIBRARIES}
+  ${tf2_msgs_LIBRARIES}
   ${image_transport_LIBRARIES}
   ${cv_bridge_LIBRARIES}
   #${unique_identifier_msgs_LIBRARIES}
@@ -144,6 +149,7 @@ ament_target_dependencies(tb3_skillset_debug
   nav_msgs
   sensor_msgs
   tf2
+  tf2_msgs
   image_transport
   cv_bridge
   diagnostic_msgs

@@ -3,7 +3,7 @@
         {
             "name": "Pose",
             "package": "geometry_msgs",
-            "message": "PoseStamped"
+            "message": "PoseWithCovariance"
         },
         {
             "name": "Name",

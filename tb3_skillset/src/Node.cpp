@@ -21,6 +21,13 @@ Tb3SkillsetManager::Tb3SkillsetManager() : Tb3SkillsetNode(),
             "/initialpose",
             10 //queue size
     );
+    // Subscriber to the /tf topic 
+    this->tf_subscriber_ = this->create_subscription<tf2_msgs::msg::TFMessage>(
+      "/tf",
+      10,
+      std::bind(&Tb3SkillsetManager::tf_callback_, this, _1)
+    );
+
     // SKill Move to 
     this->go_to_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(
       this,
@@ -74,6 +81,11 @@ void Tb3SkillsetManager::event_low_battery_hook(){
   RCLCPP_INFO(this->get_logger(), "Battery levels are low. Cancelling any active skill.");
 }
 void Tb3SkillsetManager::event_enable_exploration_hook(){
+  // auto current_pose = this->get_data_currentpose();
+  //  = current_pose.value.pose.position.x;
+  // initial_pose.pose.pose.position.y = current_pose.value.pose.position.y;
+  // initial_pose.pose.pose.orientation.w = current_pose.value.pose.orientation.w;
+  // initial_pose.header.frame_id = "map";
   RCLCPP_INFO(this->get_logger(), "Exploration has been enabled.");
 }
 void Tb3SkillsetManager::event_enable_navigation_hook(){
@@ -178,8 +190,6 @@ void Tb3SkillsetManager::go_to_cancel_(){
 // ======================================== Skill GetHome ============================================ 
 
 void Tb3SkillsetManager::skill_get_home_on_start(){
-  // create a small subscriber to the /diagnostics topic to check if nav2 is active
-  rclcpp::Subscription<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr small_diagnostic_subscriber_;
   
   RCLCPP_INFO(this->get_logger(), "Retrieving initial pose");
   geometry_msgs::msg::PoseWithCovarianceStamped initial_pose; 
@@ -188,25 +198,14 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
   initial_pose.pose.pose.position.y = input->y.data;
   initial_pose.pose.pose.orientation.w = input->theta.data;
   initial_pose.header.frame_id = "map";
+  
   try
   {
     this->GetHome_publisher_->publish(initial_pose);
-    RCLCPP_INFO(this->get_logger(), "Publishing initial pose");
-   
-    auto start_time = std::chrono::steady_clock::now();
-    while (!nav2_active_) {
-        // Check if timeout has occurred
-        auto current_time = std::chrono::steady_clock::now();
-        auto elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time).count();
-        if (elapsed_time > 2) {
-            RCLCPP_ERROR(this->get_logger(), "Timeout occurred while waiting for Nav2 initialization feedback. Assuming success.");
-            this->skill_get_home_success_ok();
-            return;
-        }
-    }
 
-    RCLCPP_INFO(this->get_logger(), "Initial pose sent. Nav2 initialized. Returning success.");
-    this->skill_get_home_success_ok();
+    elapsed_time_ = std::chrono::milliseconds(0);
+    update_timer_ = this->create_wall_timer(10ms, std::bind(&Tb3SkillsetManager::init_callback_, this));
+    RCLCPP_INFO(this->get_logger(), "Published initial pose. Waiting for Nav2 to initialize.");
     return;
   }
   catch(const std::exception& e)
@@ -216,6 +215,56 @@ void Tb3SkillsetManager::skill_get_home_on_start(){
     return;
   }
 }
+
+void Tb3SkillsetManager::init_callback_(){
+  if (nav2_active_) {
+    RCLCPP_INFO(this->get_logger(), "Nav2 initialized. Returning success.");
+    update_timer_.reset();
+    this->skill_get_home_success_ok();
+  }
+  else if (elapsed_time_.count() > 5000) {
+    RCLCPP_INFO(this->get_logger(), "Nav 2 did not initialize in time. Returning failure.");
+    update_timer_.reset();
+    this->skill_get_home_failure_ko();
+  }
+  else{
+    elapsed_time_ += 10ms;
+  }
+}
+
+ void Tb3SkillsetManager::tf_callback_(const tf2_msgs::msg::TFMessage::SharedPtr msg){
+  if (get_context_state() == "SLAM"){
+    geometry_msgs::msg::PoseWithCovariance pose;
+
+    for (auto transform : msg->transforms) {
+    if (transform.child_frame_id == "base_footprint") {
+      x_b = transform.transform.translation.x;
+      y_b = transform.transform.translation.y;
+      z_b = transform.transform.translation.z;
+      r_x_b = transform.transform.rotation.x;
+      r_y_b = transform.transform.rotation.y;
+      r_z_b = transform.transform.rotation.z;
+      r_w_b = transform.transform.rotation.w;
+    }
+    if (transform.child_frame_id == "odom") {
+      x_o = transform.transform.translation.x;
+      y_o = transform.transform.translation.y;
+      z_o = transform.transform.translation.z;
+      w_o = transform.transform.rotation.w;
+    }
+  }
+  pose.pose.position.x = x_o + x_b;
+  pose.pose.position.y = y_o + y_b;
+  pose.pose.position.z = z_o + z_b;
+  pose.pose.orientation.x = r_x_b;
+  pose.pose.orientation.y = r_y_b;
+  pose.pose.orientation.z = r_z_b;
+  pose.pose.orientation.w = r_w_b;
+
+  this->set_data_currentpose(pose);
+  }
+  // RCLCPP_INFO_STREAM(this->get_logger(), "Context: " + get_context_state());
+ }
 
 // ======================================== Skill TakePicture ============================================
 bool Tb3SkillsetManager::save_image_(std::string filename) {
@@ -302,7 +351,6 @@ void Tb3SkillsetManager::odom_callback_(const nav_msgs::msg::Odometry::SharedPtr
   tf2::Matrix3x3 m(q);
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
-
   robot_pose_ = yaw;
 }
 

@@ -1,12 +1,12 @@
 type{
     Float
-    //Pose
+    Pose
     Name
 }
 
 skillset turtlebot {
 
-    //data currentpose: Pose
+    data currentpose: Pose
 
     resource {
         authority {
